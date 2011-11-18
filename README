@@ -1,0 +1,10 @@
+Often NoSQL solutions sacrifice data structures and query features to support
+high availability and scalability.
+
+This project attempts to provide basic data structures for various
+document storage solutions. If a user implements the class NodeStore they 
+should be able to use a Circularly Doubly Linked List and a B-Tree
+with the data store they choose.
+
+This project currently provides a MongoDB and Directory implementation
+of the NodeStore interface.

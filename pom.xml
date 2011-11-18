@@ -4,7 +4,7 @@
 	<groupId>sdsai-dsds</groupId>
 	<artifactId>org.sdsai</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-
+	<name>SDSAI Document Store Data Structures</name>
 
 	<build>
 		<defaultGoal>install</defaultGoal>
@@ -14,6 +14,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
+				  <showWarnings>true</showWarnings>
+				  <showDeprecation>true</showDeprecation>
 					<source>1.6</source>
 					<target>1.6</target>
 					<encoding>UTF-8</encoding>
@@ -30,6 +32,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.6</version>
+			  <configuration>
+			    <encoding>UTF-8</encoding>
+		    </configuration>
 			</plugin>
 			
 			<plugin>
@@ -64,6 +69,11 @@
 			<version>4.10</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>2.7.2</version>
+		</dependency>		
 	</dependencies>
 
 </project>
