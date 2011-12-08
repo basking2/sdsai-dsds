@@ -1,0 +1,5 @@
+ - Implement a NodeStore for:
+   o Cassandra
+   o CouchDB
+   o Other?
+ - Implement other data structures / algorithms?
