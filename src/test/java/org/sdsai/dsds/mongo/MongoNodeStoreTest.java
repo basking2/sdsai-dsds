@@ -83,7 +83,7 @@ public class MongoNodeStoreTest {
                 db.getCollection(dataCollection));
             bt = new BTree<String, String, String>("btRoot", ns, 1);
         }
-        catch (Error e)
+        catch (Throwable e)
         {
             assumeNoException(e);
         }
