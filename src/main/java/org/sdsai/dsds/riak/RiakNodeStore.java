@@ -3,12 +3,16 @@ package org.sdsai.dsds.riak;
 import org.sdsai.dsds.node.NodeStore;
 import org.sdsai.dsds.node.Node;
 import org.sdsai.dsds.node.NodeStoreException;
+import org.sdsai.dsds.node.NodeStoreNodeNotFoundException;
 
+import com.basho.riak.client.bucket.Bucket;
 import com.basho.riak.client.cap.VClock;
 import com.basho.riak.client.cap.BasicVClock;
 import com.basho.riak.client.convert.Converter;
-import com.basho.riak.client.IRiakClient;
 import com.basho.riak.client.http.response.FetchResponse;
+import com.basho.riak.client.IRiakClient;
+import com.basho.riak.client.IRiakObject;
+import com.basho.riak.client.operations.FetchObject;
 import com.basho.riak.client.RiakRetryFailedException;
 
 import static java.util.UUID.randomUUID;
@@ -94,7 +98,13 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            return dataConverter.toDomain(riakClient.fetchBucket(dataBucket).execute().fetch(key).execute());
+	    final IRiakObject riakObject = getDataBucket().fetch(key).execute();
+
+	    if ( riakObject == null ) {
+		return null;
+	    }
+
+            return dataConverter.toDomain(riakObject);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -103,14 +113,37 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     }
 
     /**
+     * Get the Node Bucket from Riak.
+     */
+    private Bucket getDataBucket() throws RiakRetryFailedException
+    {
+	return riakClient.fetchBucket(dataBucket).execute();
+    }
+
+    /**
+     * Get the Node Bucket from Riak.
+     */
+    private Bucket getNodeBucket() throws RiakRetryFailedException
+    {
+	return riakClient.fetchBucket(nodeBucket).execute();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public Node<USERKEY, String> loadNode(final String key)
+    public Node<USERKEY, String> loadNode(final String key) 
+	throws NodeStoreNodeNotFoundException
     {
         try 
         {
-            return nodeConverter.toDomain(riakClient.fetchBucket(nodeBucket).execute().fetch(key).execute());
+	    final IRiakObject riakObject = getNodeBucket().fetch(key).execute();
+
+	    if ( riakObject == null ) {
+		throw new NodeStoreNodeNotFoundException("Could not find the node with key "+key);
+	    }
+
+            return nodeConverter.toDomain(riakObject);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -126,7 +159,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            riakClient.fetchBucket(dataBucket).execute().delete(key);
+            getDataBucket().delete(key);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -142,7 +175,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            riakClient.fetchBucket(nodeBucket).execute().delete(key);
+            getNodeBucket().delete(key);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -176,7 +209,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            riakClient.fetchBucket(nodeBucket).execute().store(key, nodeConverter.fromDomain(node, randomVClock()));
+            getNodeBucket().store(key, nodeConverter.fromDomain(node, randomVClock()));
         }
         catch (final RiakRetryFailedException e)
         {
@@ -192,7 +225,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            riakClient.fetchBucket(dataBucket).execute().store(key, dataConverter.fromDomain(data, randomVClock()));
+            getDataBucket().store(key, dataConverter.fromDomain(data, randomVClock()));
         }
         catch (final RiakRetryFailedException e)
         {
