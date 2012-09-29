@@ -8,12 +8,19 @@ import org.sdsai.dsds.node.NodeStoreNodeNotFoundException;
 import com.basho.riak.client.bucket.Bucket;
 import com.basho.riak.client.cap.VClock;
 import com.basho.riak.client.cap.BasicVClock;
-import com.basho.riak.client.convert.Converter;
 import com.basho.riak.client.http.response.FetchResponse;
 import com.basho.riak.client.IRiakClient;
 import com.basho.riak.client.IRiakObject;
+import com.basho.riak.client.RiakException;
 import com.basho.riak.client.operations.FetchObject;
 import com.basho.riak.client.RiakRetryFailedException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import static java.util.UUID.randomUUID;
 
@@ -23,49 +30,46 @@ import static java.util.UUID.randomUUID;
  */
 public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String, VALUE>
 {
-
+    private Logger logger = LoggerFactory.getLogger(RiakNodeStore.class);
     private IRiakClient riakClient;
     private String dataBucket;
     private String nodeBucket;
+    private ObjectMapper objectMapper;
 
-    private Converter<VALUE> dataConverter;
-    private Converter<Node<USERKEY, String>> nodeConverter;
+    private Class<VALUE> valueClass;
 
     /**
      * Create a new RiakNodeStore that manipulates objects in a particular bucket.
      * @param riakClient The RiakClient to use.
      * @param nodeBucket The bucket that nodes will be stored in.
      * @param dataBucket The bucket that user data will be stored in.
-     * @param nodeConverter Bridges java objects to riak storage representations.
-     * @param dataConverter Bridges java objects to riak storage representations.
+     * @param valueClass The value class to convert members back from.
      */
     public RiakNodeStore(final IRiakClient riakClient,
                          final String nodeBucket,
                          final String dataBucket,
-                         final Converter<Node<USERKEY, String>> nodeConverter,
-                         final Converter<VALUE> dataConverter)
+                         final Class<VALUE> valueClass)
     {
         this.riakClient = riakClient;
         this.dataBucket = dataBucket;
         this.nodeBucket = nodeBucket;
-        this.nodeConverter = nodeConverter;
-        this.dataConverter = dataConverter;
+        this.objectMapper = new ObjectMapper();
+        this.valueClass = valueClass;
     }
 
     /**
-     * This is the same as {@link #RiakNodeStore(IRiakClient, String, String, Converter, Converter)} but will all objects are in 1 bucket.
+     * This is the same as {@link #RiakNodeStore(IRiakClient, String, String, Class<VALUE>)}
+     * but will all objects are in 1 bucket.
      *
      * @param riakClient The IRiakClient.
      * @param bucket The bucket that nodes and user data will be stored in.
-     * @param nodeConverter Bridges java objects to riak storage representations.
-     * @param dataConverter Bridges java objects to riak storage representations.
+     * @param valueClass The value class to convert members back from.
      */
     public RiakNodeStore(final IRiakClient riakClient,
                          final String bucket,
-                         final Converter<Node<USERKEY, String>> nodeConverter,
-                         final Converter<VALUE> dataConverter)
+                         final Class<VALUE> valueClass)
     {
-        this(riakClient, bucket, bucket, nodeConverter, dataConverter);
+        this(riakClient, bucket, bucket, valueClass);
     }
 
     /**
@@ -98,13 +102,21 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
+            logger.debug("Loading data@"+key);
+
 	    final IRiakObject riakObject = getDataBucket().fetch(key).execute();
 
 	    if ( riakObject == null ) {
+                logger.debug("Not found: data@"+key);
 		return null;
 	    }
 
-            return dataConverter.toDomain(riakObject);
+            logger.debug("Found: data@"+key);
+            return objectMapper.readValue(riakObject.getValueAsString(), valueClass);
+        }
+        catch (final IOException e)
+        {
+            throw new NodeStoreException(e);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -117,7 +129,14 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
      */
     private Bucket getDataBucket() throws RiakRetryFailedException
     {
-	return riakClient.fetchBucket(dataBucket).execute();
+	final Bucket bucket = riakClient.fetchBucket(dataBucket).execute();
+
+        if ( bucket == null )
+        {
+            throw new NodeStoreException("Bucket "+dataBucket+" not found.");
+        }
+
+        return bucket;
     }
 
     /**
@@ -125,7 +144,14 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
      */
     private Bucket getNodeBucket() throws RiakRetryFailedException
     {
-	return riakClient.fetchBucket(nodeBucket).execute();
+	final Bucket bucket = riakClient.fetchBucket(nodeBucket).execute();
+
+        if ( bucket == null )
+        {
+            throw new NodeStoreException("Bucket "+nodeBucket+" not found.");
+        }
+
+	return bucket;
     }
 
     /**
@@ -139,11 +165,18 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
         {
 	    final IRiakObject riakObject = getNodeBucket().fetch(key).execute();
 
+            logger.debug("Loading node@"+key);
 	    if ( riakObject == null ) {
+                logger.debug("Not found: node@"+key);
 		throw new NodeStoreNodeNotFoundException("Could not find the node with key "+key);
 	    }
 
-            return nodeConverter.toDomain(riakObject);
+            logger.debug("Not found: node@"+key);
+            return objectMapper.readValue(riakObject.getValueAsString(), Node.class);
+        }
+        catch (final IOException e)
+        {
+            throw new NodeStoreException(e);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -159,9 +192,9 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            getDataBucket().delete(key);
+            getDataBucket().delete(key).execute();
         }
-        catch (final RiakRetryFailedException e)
+        catch (final RiakException e)
         {
             throw new NodeStoreException(e);
         }
@@ -175,9 +208,9 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            getNodeBucket().delete(key);
+            getNodeBucket().delete(key).execute();
         }
-        catch (final RiakRetryFailedException e)
+        catch (final RiakException e)
         {
             throw new NodeStoreException(e);
         }
@@ -209,7 +242,11 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            getNodeBucket().store(key, nodeConverter.fromDomain(node, randomVClock()));
+            getNodeBucket().store(key, objectMapper.writeValueAsString(node)).execute();
+        }
+        catch (final IOException e)
+        {
+            throw new NodeStoreException(e);
         }
         catch (final RiakRetryFailedException e)
         {
@@ -225,7 +262,11 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     {
         try 
         {
-            getDataBucket().store(key, dataConverter.fromDomain(data, randomVClock()));
+            getDataBucket().store(key, objectMapper.writeValueAsString(data)).execute();
+        }
+        catch (final IOException e)
+        {
+            throw new NodeStoreException(e);
         }
         catch (final RiakRetryFailedException e)
         {
