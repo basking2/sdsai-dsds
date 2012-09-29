@@ -25,6 +25,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.xml.bind.annotation.XmlTransient;
+
 /**
  * The basic object that is persisted to a large distributed 
  * storage via a {@link NodeStore}. Notice that a {@link Node}
@@ -38,7 +41,7 @@ public class Node<USERKEY, STOREKEY> implements Serializable
     private List<STOREKEY> children;
     
     private int dataCap;
-    private int ancestorCap;
+    private int ancestorsCap;
     private int childCap;
 
     /**
@@ -64,7 +67,7 @@ public class Node<USERKEY, STOREKEY> implements Serializable
     {
         this.childCap = childCap;
         this.dataCap = dataCap;
-        this.ancestorCap = ancestorCap;
+        this.ancestorsCap = ancestorsCap;
         
         this.data = new ArrayList(dataCap);
         this.children = new ArrayList(childCap);
@@ -92,19 +95,25 @@ public class Node<USERKEY, STOREKEY> implements Serializable
     }
     
     public int getAncestorsCap() {
-        return ancestorCap;
+        return ancestorsCap;
     }
     
+    @JsonIgnore
+    @XmlTransient
     public boolean isDataFull() {
         return dataCap == data.size();
     }
     
+    @JsonIgnore
+    @XmlTransient
     public boolean isChildrenFull() {
         return childCap == children.size();
     }
     
+    @JsonIgnore
+    @XmlTransient
     public boolean isAncestorsFull() {
-        return ancestorCap == ancestors.size();
+        return ancestorsCap == ancestors.size();
     }
     
     public void setData(final List<USERKEY> data) {
@@ -127,8 +136,8 @@ public class Node<USERKEY, STOREKEY> implements Serializable
         this.childCap = childCap;
     }
 
-    public void setAncestorCap(final int ancestorCap) {
-        this.ancestorCap = ancestorCap;
+    public void setAncestorCap(final int ancestorsCap) {
+        this.ancestorsCap = ancestorsCap;
     }
     
     /**
@@ -136,6 +145,8 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      *
      * @return true of this node has no data.
      */
+    @JsonIgnore
+    @XmlTransient
     public boolean isEmpty()
     {
         return data.isEmpty();
@@ -146,6 +157,8 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      *
      * @return true if this node has no children.
      */
+    @JsonIgnore
+    @XmlTransient
     public boolean isLeaf() {
         return children.isEmpty();
     }
@@ -155,6 +168,8 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      *
      * @return true if this node has no ancestors.
      */
+    @JsonIgnore
+    @XmlTransient
     public boolean isRoot() {
         return ancestors.isEmpty();
     }
