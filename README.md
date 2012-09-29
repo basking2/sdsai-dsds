@@ -1,3 +1,5 @@
+SDSAI-DSDS
+==========
 
 ABOUT
 -----
@@ -47,7 +49,8 @@ IMPLEMENTED DATA STRUCTURES
 IMPLEMENTED DATABASES
 ---------------------
 
-DirectoryNodeStore - Stores data structures in a file system. One file
-                     per Node and one file per user data object.
-MongoDB - Implemented using the raw MongoDB driver.
+* DirectoryNodeStore - Stores data structures in a file system. One file
+                       per Node and one file per user data object.
+* MongoDB - Implemented using the raw MongoDB driver.
+* Riak - Implemented using Jackson 2 to serialize Node and user data.
 
