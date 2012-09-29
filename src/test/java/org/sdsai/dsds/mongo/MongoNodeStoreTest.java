@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 import static java.util.UUID.randomUUID;  
 
 public class MongoNodeStoreTest {
-    public static final String host = "localhost";
+    public static final String host = "127.0.0.1";
     public static final String user = "test";
     public static final String pass = "test";
     public static final String database = "test";

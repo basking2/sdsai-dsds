@@ -67,6 +67,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public VALUE loadData(String key) {
         try
         {
@@ -87,6 +88,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Node<USERKEY, String> loadNode(String key) {
         try
         {
@@ -108,6 +110,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void store(String key, VALUE data) {
         try
         {
@@ -124,6 +127,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void store(String key, Node<USERKEY, String> node) {
         try
         {
@@ -140,6 +144,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeNode(String key) {
         try
         {
@@ -154,6 +159,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeData(String key) {
         try
         {
@@ -168,6 +174,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public String generateKey(Node<USERKEY, String> node) {
         try 
         {
@@ -182,6 +189,7 @@ public class MongoNodeStore<USERKEY, VALUE>
     /**
      * {@inheritDoc}
      */
+    @Override
     public String convert(final USERKEY key) {
         return key.toString();
     }
