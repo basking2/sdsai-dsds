@@ -984,8 +984,8 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     assert(right.getChildren().size() == minData+1);
                 }
                 
-                final STOREKEY leftKey = nodeStore.generateKey(left);
-                final STOREKEY rightKey = nodeStore.generateKey(right);
+                final STOREKEY leftKey = nodeStore.generateKey(left, null);
+                final STOREKEY rightKey = nodeStore.generateKey(right, null);
                 final K dataKey = node.getData().get(middleData);
                                     
                 if ( atRoot() ) {

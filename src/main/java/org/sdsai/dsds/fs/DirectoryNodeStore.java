@@ -159,7 +159,7 @@ implements NodeStore<K, File, D>
      * {@inheritDoc}
      */
     @Override
-    public File generateKey(final Node<K,File> node)
+    public File generateKey(final Node<K,File> node, final D d)
     {
         File f;
         

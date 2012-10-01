@@ -89,7 +89,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
      * @return the string representation of a call to {@link java.util.UUID#randomUUID()}.
      */
     @Override
-    public String generateKey(final Node<USERKEY, String> node)
+    public String generateKey(final Node<USERKEY, String> node, VALUE value)
     {
         return randomUUID().toString();
     }

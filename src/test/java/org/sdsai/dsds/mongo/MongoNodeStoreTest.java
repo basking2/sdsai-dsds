@@ -92,7 +92,7 @@ public class MongoNodeStoreTest {
     @Test
     public void testGenerateKey() 
     {
-        ns.generateKey(null);
+        ns.generateKey(null, null);
     }
     
     @Test

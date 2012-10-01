@@ -225,7 +225,7 @@ implements List<V>
                                 final Node<STOREKEY, STOREKEY> nextNode)
     {
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
-        final STOREKEY key = nodeStore.generateKey(node);
+        final STOREKEY key = nodeStore.generateKey(node, null);
         
         if ( prevKey.equals(nextKey) )
         {
@@ -263,7 +263,7 @@ implements List<V>
     {
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
 
-        final STOREKEY key = nodeStore.generateKey(node);
+        final STOREKEY key = nodeStore.generateKey(node, null);
         
         final List<STOREKEY> l = 
             prevNode.getData().subList(pageSize/2, prevNode.getData().size());
@@ -526,7 +526,7 @@ implements List<V>
     {
         for (final V v : c)
         {
-            final STOREKEY vkey = nodeStore.generateKey(null);
+            final STOREKEY vkey = nodeStore.generateKey(null, v);
             
             // If there is no room we must insert an empty page
             // replacing ctx with it.
@@ -550,7 +550,7 @@ implements List<V>
     
     private boolean add(PagedListLocation<STOREKEY> ctx, final V v)
     {
-        final STOREKEY vkey = nodeStore.generateKey(null);
+        final STOREKEY vkey = nodeStore.generateKey(null, v);
         
         // If there is no room we must insert an empty page
         // replacing ctx with it.

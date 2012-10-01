@@ -175,7 +175,7 @@ public class MongoNodeStore<USERKEY, VALUE>
      * {@inheritDoc}
      */
     @Override
-    public String generateKey(Node<USERKEY, String> node) {
+    public String generateKey(Node<USERKEY, String> node, VALUE value) {
         try 
         {
             return new ObjectId().toString();

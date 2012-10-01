@@ -92,10 +92,14 @@ public interface NodeStore<USERKEY, STOREKEY, VALUE>
      * @param node This is provided to implementations for some context.
      *             If generateKey is being called for the purposes of
      *             storing a user key, this will be null.
-     *
+     * @param value If a key is being generated for a user key value, it will
+     *              be passed along. This is most useful
+     *              when things like a {@link org.sdsai.dsds.PagedList}
+     *              are adding a value, but the List API does not 
+     *              provide a way to specify a key.
      * @throws NodeStoreException
      */
-    STOREKEY generateKey(Node<USERKEY, STOREKEY> node);
+    STOREKEY generateKey(Node<USERKEY, STOREKEY> node, VALUE value);
     
     /**
      * Convert user keys to store keys. This method, given a user's key,
