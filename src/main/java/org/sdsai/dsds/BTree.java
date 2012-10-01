@@ -206,6 +206,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Check the {@link NodeStore} for the given key.
      * @return true of the key is found in the {@link NodeStore}.
      */
+    @Override
     public boolean containsKey(Object key) { 
         return null != nodeStore.loadData(nodeStore.convert((K)key));
     }
@@ -218,6 +219,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * the root {@link Node} key as other pieces of code may
      * be accessing this object.
      */
+    @Override
     public void clear() {
     
         eachDepthFirst(new NodeFunction<K,STOREKEY>(){
@@ -276,6 +278,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsValue(Object value) {
         
         if ( value == null ) {
@@ -297,6 +300,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Map.Entry<K,V>> entrySet(){
         return new AbstractSet<Map.Entry<K,V>>(){
         
@@ -386,6 +390,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o) {
         if ( o == null )
             return false;
@@ -401,6 +406,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<K> keySet() { 
         return new AbstractSet<K>(){
             @Override
@@ -418,6 +424,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Retrieve the object from the {@link NodeStore}.
      * @return The user data returned by {@link NodeStore#loadData(Object)}.
      */
+    @Override
     public V get(Object key){
         return nodeStore.loadData(nodeStore.convert((K)key));
     }
@@ -426,6 +433,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Return the hash code of the {@link #rootKey} used to create this tree.
      * @return the hash code of the {@link #rootKey} used to create this tree.
      */
+    @Override
     public int hashCode(){
         return rootKey.hashCode();
     }
@@ -434,6 +442,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Return true if the fetched root node has no data in it.
      * @return true if the fetched root node has no data in it.
      */
+    @Override
     public boolean isEmpty(){
         return getRoot().getData().isEmpty();
     }
@@ -461,6 +470,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      *            by {@link NodeStore#convert(Object)}.
      * @param value The value stored.
      */
+    @Override
     public V put(final K key, final V value)
     {
         final STOREKEY storeKey = nodeStore.convert(key);
@@ -509,6 +519,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     /**
      * Calls {@link Map#entrySet()} and {@link #put}s each elment.
      */
+    @Override
     public void putAll(Map<? extends K,? extends V> m) {
         for(final Map.Entry<? extends K,? extends V> me : m.entrySet()) {
             put(me.getKey(), me.getValue());
@@ -524,6 +535,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      *
      * @throws ClassCastException if {@code keyObject} is not a key.
      */
+    @Override
     public V remove(Object keyObject) {
         final K userKey = (K) keyObject;
         final STOREKEY storeKey = nodeStore.convert(userKey);
@@ -700,6 +712,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Iterate through the entire datastrucuture and counts each element.
      * Avoid using this.
      */
+    @Override
     public int size() {
         final Integer[] i = new Integer[1];
         i[0] = 0;
@@ -719,6 +732,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * Iterate through then entire datastructure and retrieves each
      * element.
      */
+    @Override
     public Collection<V> values(){
         return new AbstractCollection<V>(){
             @Override
@@ -1234,6 +1248,12 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         return loc.go( (index >= 0 ? index : insertionPoint) );
     }
 
+    /**
+     * Select an inclusive range from lower to upper.
+     *
+     * @param lower The lower boundary of the selection, inclusive.
+     * @param upper The upper boundary of the selection, exclusive.
+     */
     public BTreeSelection<K,STOREKEY> select(final K lower, final K upper)
     {
         return new BTreeSelection<K, STOREKEY>(

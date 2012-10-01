@@ -24,12 +24,31 @@ package org.sdsai.dsds;
 import java.util.Iterator;
 import java.lang.Iterable;
 
+/**
+ * Construct a BTreeSelection from a lower key to an upper key {@code (lower,upper]}.
+ */
 public class BTreeSelection<USERKEY, STOREKEY>
 implements Iterable<USERKEY>
 {
+
+    /**
+     * The begin key, inclusive.
+     */
     private BTreeLocation<USERKEY, STOREKEY> begin;
+
+    /**
+     * The end key, exclusive.
+     */
     private BTreeLocation<USERKEY, STOREKEY> end;
     
+    /**
+     * Build a new selection from {@code begin} to {@code end} exclusive.
+     *
+     * {@code Begin} must be before {@code end} or this will not terminate when iterated over.
+     *
+     * @param begin Begin, inclusive.
+     * @param end End, exclusive.
+     */
     public BTreeSelection(final BTreeLocation<USERKEY, STOREKEY> begin,
                           final BTreeLocation<USERKEY, STOREKEY> end)
     {
@@ -37,6 +56,14 @@ implements Iterable<USERKEY>
         this.end = end;
     }
     
+    /**
+     * Build a new selection from {@code begin} to {@code end} exclusive.
+     *
+     * {@code Begin} must be before {@code end} or this will not terminate when iterated over.
+     *
+     * @param begin Begin, inclusive.
+     * @param end End, exclusive.
+     */
     public BTreeSelection(final BTree<USERKEY, STOREKEY, ?> btree,
                           final USERKEY begin,
                           final USERKEY end)
@@ -44,6 +71,9 @@ implements Iterable<USERKEY>
         this(btree.getLocation(begin), btree.getLocation(end));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Iterator<USERKEY> iterator()
     {
@@ -71,6 +101,9 @@ implements Iterable<USERKEY>
         };
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString()
     {
