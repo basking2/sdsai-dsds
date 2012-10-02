@@ -32,12 +32,12 @@ import org.sdsai.dsds.node.NodeStore;
  */
 public class PagedListLocation<STOREKEY>
 {
-    private NodeStore nodeStore;
+    private NodeStore<STOREKEY, STOREKEY, ?> nodeStore;
     private Node<STOREKEY, STOREKEY> node;
     private STOREKEY key;
     private int index;
     
-    public PagedListLocation(final NodeStore nodeStore,
+    public PagedListLocation(final NodeStore<STOREKEY, STOREKEY, ?> nodeStore,
                              final STOREKEY key,
                              final Node<STOREKEY, STOREKEY> node,
                              final int index)
@@ -48,14 +48,14 @@ public class PagedListLocation<STOREKEY>
         this.index = index;
     }
     
-    public PagedListLocation(final NodeStore nodeStore,
+    public PagedListLocation(final NodeStore<STOREKEY, STOREKEY, ?> nodeStore,
                              final STOREKEY key,
                              final Node<STOREKEY, STOREKEY> node)
     {
         this(nodeStore, key, node, 0);
     }
     
-    public PagedListLocation(final NodeStore nodeStore, final STOREKEY key)
+    public PagedListLocation(final NodeStore<STOREKEY, STOREKEY, ?> nodeStore, final STOREKEY key)
     {
         this(nodeStore, key, nodeStore.loadNode(key));
     }
@@ -70,14 +70,14 @@ public class PagedListLocation<STOREKEY>
         return node.getAncestors().get(0);
     }
     
-    public PagedListLocation next()
+    public PagedListLocation<STOREKEY> next()
     {
-        return new PagedListLocation(nodeStore, nextKey());
+        return new PagedListLocation<STOREKEY>(nodeStore, nextKey());
     }
     
-    public PagedListLocation prev()
+    public PagedListLocation<STOREKEY> prev()
     {
-        return new PagedListLocation(nodeStore, prevKey());
+        return new PagedListLocation<STOREKEY>(nodeStore, prevKey());
     }
     
     /**
@@ -86,7 +86,7 @@ public class PagedListLocation<STOREKEY>
      *
      * @return this
      */
-    public PagedListLocation index(final int index)
+    public PagedListLocation<STOREKEY> index(final int index)
     {
         this.index = index;
         return this;
