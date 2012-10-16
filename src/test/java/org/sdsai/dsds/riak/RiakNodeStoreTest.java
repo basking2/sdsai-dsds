@@ -64,6 +64,10 @@ public class RiakNodeStoreTest {
             ns = new RiakNodeStore(riakClient, nodeBucket, dataBucket, String.class);
 
             bt = new BTree<String, String, String>("btRoot", ns, 1);
+
+            // Force an exception if there is no Riak server running.
+            bt.getStartNode();
+
         }
         catch (Throwable e)
         {
