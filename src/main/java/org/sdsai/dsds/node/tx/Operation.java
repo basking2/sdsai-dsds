@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 /**
  * An Operation is write, read, or other activity on a {@link NodeStore}
- * which is included in a {@link Transaction}.
+ * which is included in a {@link TransactionalNodeStore}.
  */
 public abstract class Operation<KEY, VALUE>
 {
@@ -63,11 +63,11 @@ public abstract class Operation<KEY, VALUE>
      * Delete this operation.
      *
      * An operation structure typically has a lot of data associated with it. When a future operation
-     * obviates a previous operation that previous operation is not removed from the {@link Transaction}
+     * obviates a previous operation that previous operation is not removed from the {@link TransactionalNodeStore}
      * structure. Rather, its {@link #delete()} method is called to release all unecessary data
      * and mark the Operation as deleted.
      *
-     * Deleted operations will not be executed when the {@link Transaction} is committed.
+     * Deleted operations will not be executed when the {@link TransactionalNodeStore} is committed.
      */
     public void delete()
     {
