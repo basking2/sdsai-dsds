@@ -3,3 +3,7 @@
    o CouchDB
    o Other?
  - Implement other data structures / algorithms?
+ - Transactions
+   o SubTransactions do not have visibility into parent transaction
+     operations. They should.
+ - Implement Sorted Map Interface to BTree.
