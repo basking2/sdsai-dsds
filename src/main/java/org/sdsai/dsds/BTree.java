@@ -207,6 +207,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * @return true of the key is found in the {@link NodeStore}.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public boolean containsKey(Object key) { 
         return null != nodeStore.loadData(nodeStore.convert((K)key));
     }
@@ -327,7 +328,8 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                                 if ( o == null )
                                     return false;
                                     
-                                Map.Entry<K,V> m2 = (Map.Entry<K,V>) o;
+                                @SuppressWarnings("unchecked")
+                                final Map.Entry<K,V> m2 = (Map.Entry<K,V>) o;
                                 
                                 return 
                                     (this.getKey()==null?
@@ -398,7 +400,9 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         if ( ! ( o instanceof BTree ) )
             return false;
             
-        final BTree that = (BTree) o;
+        @SuppressWarnings("unchecked")
+        final BTree<? extends K, ? extends STOREKEY, ? extends V> that =
+            (BTree<? extends K, ? extends STOREKEY, ? extends V>) o;
         
         return this.rootKey.equals(that.rootKey);
     }
@@ -425,6 +429,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * @return The user data returned by {@link NodeStore#loadData(Object)}.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public V get(Object key){
         return nodeStore.loadData(nodeStore.convert((K)key));
     }
@@ -537,6 +542,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      */
     @Override
     public V remove(Object keyObject) {
+        @SuppressWarnings("unchecked")
         final K userKey = (K) keyObject;
         final STOREKEY storeKey = nodeStore.convert(userKey);
         
@@ -1017,7 +1023,9 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                 nodeStore.store(leftKey, left);
                 
                 // pick the left or right child as the current node to be in.
-                if ( ( (Comparable)dataKey).compareTo(userKey) <= 0 ) {
+                @SuppressWarnings("unchecked")
+                final Comparable<K> comparableDataKey = (Comparable<K>)dataKey;
+                if ( comparableDataKey.compareTo(userKey) <= 0 ) {
                     node = right;
                     nodeKey = rightKey;
                 } else {
@@ -1055,7 +1063,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     
     public BTreeLocation<K,STOREKEY> getStart()
     {
-        BTreeLocation l = new BTreeLocation(nodeStore, getRoot(), 0).min();
+        final BTreeLocation<K, STOREKEY> l = new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).min();
 
         l.index = -1;
         l.setSubtreeHasNext();
@@ -1066,7 +1074,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     
     public BTreeLocation<K ,STOREKEY> getEnd()
     {
-        BTreeLocation l = new BTreeLocation(nodeStore, getRoot(), 0).max();
+        final BTreeLocation<K, STOREKEY> l = new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).max();
 
         l.index = l.node.getData().size();
         l.setSubtreeHasNext();
@@ -1152,12 +1160,12 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     
     public NodeLocation<K, STOREKEY> getStartNode()
     {
-        return new NodeLocation(nodeStore, getRoot(), 0).beforeMin();
+        return new NodeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).beforeMin();
     }
 
     public NodeLocation<K, STOREKEY> getEndNode()
     {
-        return new NodeLocation(nodeStore, getRoot(), 0).afterMax();
+        return new NodeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).afterMax();
     }
 
     public Iterator<Node<K, STOREKEY>> getNodeIterator()

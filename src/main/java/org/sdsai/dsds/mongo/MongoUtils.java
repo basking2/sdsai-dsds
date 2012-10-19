@@ -104,7 +104,7 @@ public class MongoUtils
      * @return a DBObject wrapping {@code o} <em>or</em> if o is
      * a primitive class, just return o.
      */
-    private static Object toDBObjectHelper(final Object o, final Class clazz)
+    private static Object toDBObjectHelper(final Object o, final Class<?> clazz)
     {
         try
         {
@@ -217,7 +217,7 @@ public class MongoUtils
     }
     
     public static <T> T fromDBObjectHelper(final DBObject dbo)
-    throws Exception
+        throws Exception
     {
             final Class<?> returnType = Class.forName(dbo.get("Class").toString());
             final Object newInstance = objectFactory.newInstance(returnType);
@@ -241,7 +241,9 @@ public class MongoUtils
                 }
             }
         
-            return (T) newInstance;
+            @SuppressWarnings("unchecked")
+            final T t = (T) newInstance;
+            return t;
     }
     
     public static Object getPrimitive(final BasicDBObject dbo, 
@@ -285,14 +287,18 @@ public class MongoUtils
         
         if (returnType.isPrimitive())
         {
-            return (T) getPrimitive((BasicDBObject)dbo, fieldName, returnType);
+            @SuppressWarnings("unchecked")
+            final T t = (T) getPrimitive((BasicDBObject)dbo, fieldName, returnType);
+            return t;
         }
         
         if (isValueOfAble(returnType))
         {
-            return (T) returnType
+            @SuppressWarnings("unchecked")
+            final T t = (T) returnType
                 .getMethod("valueOf", String.class)
                 .invoke(null, dbo.get(fieldName).toString());
+            return t;
         }
         
         if (returnType.isArray())
@@ -308,7 +314,8 @@ public class MongoUtils
             dbo = (DBObject) dbo.get(fieldName);
             final BasicDBList dblist = (BasicDBList) dbo.get("list");
 
-            final Collection c = (Collection)
+            @SuppressWarnings("unchecked")
+            final Collection<Object> c = (Collection<Object>)
                 objectFactory.newInstance(dbo.get("Class").toString());
             
             for (int i = 0; i < dblist.size(); i++ ) {
@@ -320,7 +327,9 @@ public class MongoUtils
                 c.add(tmpo);
             }
             
-            return (T) c;
+            @SuppressWarnings("unchecked")
+            final T t = (T) c;
+            return t;
         }
 
         if (Map.class.isAssignableFrom(returnType))
@@ -328,7 +337,8 @@ public class MongoUtils
             dbo = (DBObject) dbo.get(fieldName);
             final BasicDBObject dbmap = (BasicDBObject) dbo.get("map");
             
-            final Map map = (Map)
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> map = (Map<String, Object>)
                 objectFactory.newInstance(dbo.get("Class").toString());
             
             for ( final String tmpFieldName : dbmap.keySet() )
@@ -341,11 +351,15 @@ public class MongoUtils
                 map.put(fieldName, tmpo);
             }
             
-            return (T) map;
+            @SuppressWarnings("unchecked")
+            final T t = (T) map;
+            return t;
         }
         
         // user object.
         
-        return (T) fromDBObjectHelper((DBObject)dbo.get(fieldName));
+        @SuppressWarnings("unchecked")
+        final T t = (T) fromDBObjectHelper((DBObject)dbo.get(fieldName));
+        return t;
     }
 }

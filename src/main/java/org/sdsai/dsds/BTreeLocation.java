@@ -122,7 +122,9 @@ implements Comparable<BTreeLocation<USERKEY, STOREKEY>>
         else
             thatKey = that.node.getData().get(that.index);
 
-        return ((Comparable)thisKey).compareTo(thatKey);
+        @SuppressWarnings("unchecked")
+        final Comparable<USERKEY> comparableThisKey = (Comparable<USERKEY>)thisKey;
+        return comparableThisKey.compareTo(thatKey);
     }
         
     public boolean hasPrev()

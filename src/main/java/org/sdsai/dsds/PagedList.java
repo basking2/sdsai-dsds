@@ -219,10 +219,10 @@ implements List<V>
      * inserts will populate it. Splitting may result in a list
      * that is at 1/2 capacity.
      */
-    private PagedListLocation insertPage(final STOREKEY prevKey,
-                                final Node<STOREKEY, STOREKEY> prevNode,
-                                final STOREKEY nextKey,
-                                final Node<STOREKEY, STOREKEY> nextNode)
+    private PagedListLocation<STOREKEY> insertPage(final STOREKEY prevKey,
+                                                   final Node<STOREKEY, STOREKEY> prevNode,
+                                                   final STOREKEY nextKey,
+                                                   final Node<STOREKEY, STOREKEY> nextNode)
     {
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
         final STOREKEY key = nodeStore.generateKey(node, null);
@@ -249,17 +249,17 @@ implements List<V>
         
         nodeStore.store(key, node);
         
-        return new PagedListLocation(nodeStore, key, node);
+        return new PagedListLocation<STOREKEY>(nodeStore, key, node);
     }
     
     /**
      * Splits the given list node and inserts a
      * new page after it. That new PagedListLocation is returned.
      */
-    private PagedListLocation split(final STOREKEY prevKey,
-                           final Node<STOREKEY, STOREKEY> prevNode,
-                           final STOREKEY nextKey,
-                           final Node<STOREKEY, STOREKEY> nextNode    )
+    private PagedListLocation<STOREKEY> split(final STOREKEY prevKey,
+                                              final Node<STOREKEY, STOREKEY> prevNode,
+                                              final STOREKEY nextKey,
+                                              final Node<STOREKEY, STOREKEY> nextNode    )
     {
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
 
@@ -297,7 +297,7 @@ implements List<V>
         
         nodeStore.store(key, node);
         
-        return new PagedListLocation(nodeStore, key, node);
+        return new PagedListLocation<STOREKEY>(nodeStore, key, node);
     }
     
     /**
@@ -315,9 +315,9 @@ implements List<V>
      *    The other arguments have no such garuntee and should be discarded.
      * </p>
      */
-    private void merge( final PagedListLocation prevLoc,
-                        final PagedListLocation loc,
-                        PagedListLocation nextLoc)
+    private void merge( final PagedListLocation<STOREKEY> prevLoc,
+                        final PagedListLocation<STOREKEY> loc,
+                        PagedListLocation<STOREKEY> nextLoc)
     {
         // Don't merge the same node into itself.
         // This also catches lists of page-size=1.
@@ -439,7 +439,7 @@ implements List<V>
     @Override
     public void add(final int index, final V value)
     {
-        PagedListLocation ctx = findInsertionPoint(index);
+        PagedListLocation<STOREKEY> ctx = findInsertionPoint(index);
         
         add(ctx, value);
     }
@@ -473,7 +473,7 @@ implements List<V>
      * return a new PagedListLocation with its index positioned at the next
      * insertion point.
      */
-    private PagedListLocation nextInsertionPoint(final PagedListLocation ctx)
+    private PagedListLocation<STOREKEY> nextInsertionPoint(final PagedListLocation<STOREKEY> ctx)
     {
         return nextInsertionPoint( ctx, ctx.next() );
     }
@@ -506,10 +506,10 @@ implements List<V>
             
             // We've run out of space inserting into the middle
             // of a node. Split that node.
-            final PagedListLocation ctx2 = split(ctx.getKey(),
-                                                 ctx.getNode(),
-                                                 nxt.getKey(),
-                                                 nxt.getNode());
+            final PagedListLocation<STOREKEY> ctx2 = split(ctx.getKey(),
+                                                           ctx.getNode(),
+                                                           nxt.getKey(),
+                                                           nxt.getNode());
             if ( insertionPoint <= ctx.size() )
             {
                 return ctx.index(insertionPoint);
@@ -556,7 +556,7 @@ implements List<V>
         // replacing ctx with it.
         if ( ctx.size() >= pageSize )
         {
-            final PagedListLocation nxt = ctx.next();
+            final PagedListLocation<STOREKEY> nxt = ctx.next();
             
             // An optimization for inserting single items.
             // When inserting a single item at the end of a full node,
@@ -1087,6 +1087,7 @@ implements List<V>
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] t)
     {
         int size = size();
@@ -1103,7 +1104,7 @@ implements List<V>
             t[i++] = (T) v;
         }
         
-        return (T[]) t;
+        return t;
     }
 }
 

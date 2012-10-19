@@ -77,7 +77,9 @@ public class MongoNodeStore<USERKEY, VALUE>
             if ( dbo == null )
                 return null;
 
-            return (VALUE)fromDBObject(dbo);
+            @SuppressWarnings("unchecked")
+            final VALUE v = (VALUE)fromDBObject(dbo);
+            return v;
         }
         catch(MongoException e)
         {
@@ -99,7 +101,9 @@ public class MongoNodeStore<USERKEY, VALUE>
                 throw new NodeStoreNodeNotFoundException("key:"+key);
             }
             
-            return (Node<USERKEY, String>) fromDBObject(dbo);
+            @SuppressWarnings("unchecked")
+            final Node<USERKEY, String> n = (Node<USERKEY, String>) fromDBObject(dbo);
+            return n;
         }
         catch(MongoException e)
         {

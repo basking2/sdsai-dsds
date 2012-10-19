@@ -124,6 +124,7 @@ implements NodeStore<K, File, D>
         try {
             final FileInputStream fis = new FileInputStream(file);
             final ObjectInputStream ois = new ObjectInputStream(fis);
+            @SuppressWarnings("unchecked")
             final D2 n = (D2) ois.readObject();
 
             ois.close();

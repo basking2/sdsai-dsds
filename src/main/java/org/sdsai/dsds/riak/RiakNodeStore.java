@@ -172,7 +172,9 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
 	    }
 
             logger.debug("Not found: node@"+key);
-            return objectMapper.readValue(riakObject.getValueAsString(), Node.class);
+            @SuppressWarnings("unchecked")
+            final Node<USERKEY, String> n = objectMapper.readValue(riakObject.getValueAsString(), Node.class);
+            return n;
         }
         catch (final IOException e)
         {

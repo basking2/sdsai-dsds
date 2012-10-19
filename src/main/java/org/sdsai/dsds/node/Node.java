@@ -69,9 +69,9 @@ public class Node<USERKEY, STOREKEY> implements Serializable
         this.dataCap = dataCap;
         this.ancestorsCap = ancestorsCap;
         
-        this.data = new ArrayList(dataCap);
-        this.children = new ArrayList(childCap);
-        this.ancestors = new ArrayList(ancestorsCap);
+        this.data = new ArrayList<USERKEY>(dataCap);
+        this.children = new ArrayList<STOREKEY>(childCap);
+        this.ancestors = new ArrayList<STOREKEY>(ancestorsCap);
     }
     
     public List<USERKEY> getData() {

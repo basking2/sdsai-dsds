@@ -139,10 +139,11 @@ public class NodeLocation<USERKEY, STOREKEY>
      */
     public NodeLocation<USERKEY, STOREKEY> beforeMin()
     {
-        return new NodeLocation(nodeStore,
-                                min(),
-                                new Node<USERKEY, STOREKEY>(),
-                                0);
+        return new NodeLocation<USERKEY, STOREKEY>(
+            nodeStore,
+            min(),
+            new Node<USERKEY, STOREKEY>(),
+            0);
     }
     
     /**
@@ -153,10 +154,11 @@ public class NodeLocation<USERKEY, STOREKEY>
      */
     public NodeLocation<USERKEY, STOREKEY> afterMax()
     {
-        return new NodeLocation(nodeStore,
-                                max(),
-                                new Node<USERKEY, STOREKEY>(),
-                                0);
+        return new NodeLocation<USERKEY, STOREKEY>(
+            nodeStore,
+            max(),
+            new Node<USERKEY, STOREKEY>(),
+            0);
     }
     
     public NodeLocation<USERKEY, STOREKEY> max()
