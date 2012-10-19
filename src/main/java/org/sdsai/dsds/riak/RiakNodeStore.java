@@ -26,7 +26,7 @@ import static java.util.UUID.randomUUID;
 
 /**
  * A simple RiakNodeStore in which the user must provide the serialization classes.
- * @see com.basho.riak.client.convert.JSONConverter
+ * @see com.fasterxml.jackson.databind.ObjectMapper
  */
 public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String, VALUE>
 {
@@ -58,7 +58,7 @@ public class RiakNodeStore<USERKEY, VALUE> implements NodeStore<USERKEY, String,
     }
 
     /**
-     * This is the same as {@link #RiakNodeStore(IRiakClient, String, String, Class<VALUE>)}
+     * This is the same as {@link #RiakNodeStore(IRiakClient, String, String, Class)}
      * but will all objects are in 1 bucket.
      *
      * @param riakClient The IRiakClient.

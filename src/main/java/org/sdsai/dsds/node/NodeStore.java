@@ -27,7 +27,7 @@ import java.util.concurrent.Future;
  * <p>The bridge code from Java objects to stored documents.
  * Implementors of this interface will be doing much of what a DAO would do,
  * and a little more. Specifically functions like {@link #convert(Object)}
- * and {@link #generateKey(Node)} are critical but not something a
+ * and {@link #generateKey(Node, Object)} are critical but not something a
  * traditional DAO would exposing.</p>
  *
  * <p>All exceptions are {@link NodeStoreException}s which is itself a
