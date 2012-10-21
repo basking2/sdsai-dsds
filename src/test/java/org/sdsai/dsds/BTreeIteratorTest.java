@@ -188,7 +188,7 @@ public class BTreeIteratorTest extends BaseTest<UUID>
     public void forwardsBackwardsTest()
     {
         final NodeStore<Integer, File, String> ns = 
-            new DirectoryNodeStore("target/forwadsBackwardsTest");
+            new DirectoryNodeStore<Integer, String>("target/forwadsBackwardsTest");
             
         final Integer btId = 0;
         

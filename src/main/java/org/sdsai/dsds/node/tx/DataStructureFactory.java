@@ -5,6 +5,9 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 
+import java.util.List;
+import java.util.Map;
+
 import org.sdsai.dsds.BTree;
 import org.sdsai.dsds.PagedList;
 import org.sdsai.dsds.node.NodeStore;
@@ -13,38 +16,42 @@ import org.sdsai.dsds.node.NodeStore;
 /**
  * Build transactional datastructures using {@link Proxy}.
  */
-public class DataStructureFactory<USERKEY, STOREKEY, VALUE>
+public class DataStructureFactory
 {
-    private NodeStore<USERKEY, STOREKEY, VALUE> nodeStore;
-
     /**
      * Build a new DataStructureFactory.
      *
      * @throws RuntimeException If a TransactionalNodeStore is passed as the nodeStore parameter.
      */
-    public DataStructureFactory(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    private DataStructureFactory()
+    {
+    }
+
+    private static <USERKEY, STOREKEY, VALUE> TransactionalNodeStore<USERKEY, STOREKEY, VALUE> txNodeStore(
+        final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
         if ( nodeStore instanceof TransactionalNodeStore )
         {
             throw new RuntimeException("DataStructureFactory is incompatible with TransactionalNodeStore.");
         }
 
-        this.nodeStore = nodeStore;
+        return new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore);
     }
 
-    private InvocationHandler buildTxCommittingInvocationHandler()
+    private static <USERKEY, STOREKEY, VALUE> InvocationHandler buildTxCommittingInvocationHandler(
+        final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
+        final Object dispatchObject)
     {
-        final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> transactionalNodeStore =
-            new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore);
 
+        final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> transactionalNodeStore = txNodeStore(nodeStore);
         final InvocationHandler ivh = new InvocationHandler()
         {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args)
+            public Object invoke(final Object proxy, final Method method, final Object[] args)
             {
                 try
                 {
-                    final Object returnObject = method.invoke(proxy, args);
+                    final Object returnObject = method.invoke(dispatchObject, args);
 
                     transactionalNodeStore.commit();
 
@@ -64,27 +71,69 @@ public class DataStructureFactory<USERKEY, STOREKEY, VALUE>
         return ivh;
     }
 
-    public PagedList<STOREKEY, VALUE> pagedList()
+    public static <STOREKEY, VALUE> List<VALUE> pagedList(
+        final STOREKEY root,
+        final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore,
+        final int size)
     {
+        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<STOREKEY, VALUE>(root, nodeStore, size);
+
         @SuppressWarnings("unchecked")
-        final PagedList<STOREKEY, VALUE> pagedList = (PagedList<STOREKEY, VALUE>)
+        final List<VALUE> list = (List<VALUE>)
             Proxy.newProxyInstance(
                 PagedList.class.getClassLoader(),
-                new Class<?>[]{ PagedList.class },
-                buildTxCommittingInvocationHandler());
+                new Class<?>[]{ List.class },
+                buildTxCommittingInvocationHandler(nodeStore, pagedList));
 
-        return pagedList;
+        return list;
     }
 
-    public BTree<USERKEY, STOREKEY, VALUE> bTree()
+    public static <STOREKEY, VALUE> List<VALUE> pagedList(
+        final STOREKEY root,
+        final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore)
     {
+        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<STOREKEY, VALUE>(root, nodeStore);
+
         @SuppressWarnings("unchecked")
-        final BTree<USERKEY, STOREKEY, VALUE> bTree = (BTree<USERKEY, STOREKEY, VALUE>)
+        final List<VALUE> list = (List<VALUE>)
+            Proxy.newProxyInstance(
+                PagedList.class.getClassLoader(),
+                new Class<?>[]{ List.class },
+                buildTxCommittingInvocationHandler(nodeStore, pagedList));
+
+        return list;
+    }
+
+    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+        final USERKEY root,
+        final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
+        final int size)
+    {
+        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<USERKEY, STOREKEY, VALUE>(root, nodeStore, size);
+
+        @SuppressWarnings("unchecked")
+        final Map<USERKEY, VALUE> map = (Map<USERKEY, VALUE>)
             Proxy.newProxyInstance(
                 BTree.class.getClassLoader(),
-                new Class<?>[]{ BTree.class },
-                buildTxCommittingInvocationHandler());
+                new Class<?>[]{ Map.class },
+                buildTxCommittingInvocationHandler(nodeStore, bTree));
 
-        return bTree;
+        return map;
+    }
+
+    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+        final USERKEY root,
+        final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    {
+        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<USERKEY, STOREKEY, VALUE>(root, nodeStore);
+
+        @SuppressWarnings("unchecked")
+        final Map<USERKEY, VALUE> map = (Map<USERKEY, VALUE>)
+            Proxy.newProxyInstance(
+                BTree.class.getClassLoader(),
+                new Class<?>[]{ Map.class },
+                buildTxCommittingInvocationHandler(nodeStore, bTree));
+
+        return map;
     }
 }

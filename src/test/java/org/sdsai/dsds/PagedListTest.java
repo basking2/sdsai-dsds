@@ -74,7 +74,7 @@ public class PagedListTest extends BaseTest<File>
     public void testAddRemove()
     {
         PagedList<File, String> pl = 
-            new PagedList<File, String>(nodeStore, nodeStore.generateKey(null, null), 3);
+            new PagedList<File, String>(nodeStore.generateKey(null, null), nodeStore, 3);
 
         try
         {
@@ -108,7 +108,7 @@ public class PagedListTest extends BaseTest<File>
     public void testAddRandomRemove()
     {
         PagedList<File, String> pl = 
-            new PagedList<File, String>(nodeStore, nodeStore.generateKey(null, null), 3);
+            new PagedList<File, String>(nodeStore.generateKey(null, null), nodeStore, 3);
 
         try
         {
@@ -143,7 +143,7 @@ public class PagedListTest extends BaseTest<File>
     public void testAddRandom()
     {
         PagedList<File, String> pl = 
-            new PagedList<File, String>(nodeStore, nodeStore.generateKey(null, null), 3);
+            new PagedList<File, String>(nodeStore.generateKey(null, null), nodeStore, 3);
 
         try
         {

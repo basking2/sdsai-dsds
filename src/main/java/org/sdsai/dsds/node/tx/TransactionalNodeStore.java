@@ -32,15 +32,23 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
 
     private Map<STOREKEY, Operation<STOREKEY, Node<USERKEY, STOREKEY>>> nodes;
 
+    private TransactionalNodeStore<USERKEY, STOREKEY, VALUE> parentTransaction;
+
+    public TransactionalNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    {
+        this(nodeStore, null);
+    }
+
     /**
      * Create a new transaction that operates against the given {@link NodeStore}.
      */
-    public TransactionalNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    public TransactionalNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore, final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> parentTransaction)
     {
         this.nodeStore = nodeStore;
         this.operations = new LinkedList<Operation<?,?>>();
         this.values = new HashMap<STOREKEY, Operation<STOREKEY, VALUE>>();
         this.nodes = new HashMap<STOREKEY, Operation<STOREKEY, Node<USERKEY, STOREKEY>>>();
+        this.parentTransaction = parentTransaction;
     }
 
     /**
@@ -48,7 +56,8 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
      */
     public void subTransaction(final SubTx<USERKEY, STOREKEY, VALUE> subTx)
     {
-        final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> tx = new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore);
+        final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> tx =
+            new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore, this);
 
         subTx.buildTx(tx);
 
@@ -101,12 +110,27 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     }
 
     /**
+     * Attempt to find a read operation in this transaction or any parent transaction.
+     */
+    private Operation<STOREKEY, VALUE> loadDataReadOperation(final STOREKEY key)
+    {
+        Operation<STOREKEY, VALUE> readOperation = values.get(key);
+
+        if (readOperation == null && parentTransaction != null)
+        {
+            readOperation = parentTransaction.loadDataReadOperation(key);
+        }
+
+        return readOperation;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public VALUE loadData(final STOREKEY key)
     {
-        final Operation<STOREKEY, VALUE> readOperation = values.get(key);
+        final Operation<STOREKEY, VALUE> readOperation = loadDataReadOperation(key);
 
         if ( readOperation == null ) 
         {
@@ -123,12 +147,26 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     }
 
     /**
+     * Attempt to find a read operation in this transaction or any parent transaction.
+     */
+    private Operation<STOREKEY, Node<USERKEY, STOREKEY>> loadNodeReadOperation(final STOREKEY key)
+    {
+        Operation<STOREKEY, Node<USERKEY, STOREKEY>> readOperation = nodes.get(key);
+
+        if (readOperation == null && parentTransaction != null)
+        {
+            readOperation = parentTransaction.loadNodeReadOperation(key);
+        }
+
+        return readOperation;
+    }
+    /**
      * {@inheritDoc}
      */
     @Override
     public Node<USERKEY, STOREKEY> loadNode(final STOREKEY key)
     {
-        final Operation<STOREKEY, Node<USERKEY, STOREKEY>> readOperation = nodes.get(key);
+        final Operation<STOREKEY, Node<USERKEY, STOREKEY>> readOperation = loadNodeReadOperation(key);
 
         if ( readOperation == null ) 
         {

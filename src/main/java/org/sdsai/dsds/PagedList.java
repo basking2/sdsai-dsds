@@ -54,9 +54,9 @@ implements List<V>
      */
     private int pageSize;
     
-    public PagedList(final NodeStore<STOREKEY, STOREKEY, V> nodeStore,
-                     final STOREKEY headKey,
-                     final int pageSize )
+    public PagedList(final STOREKEY headKey,
+                     final NodeStore<STOREKEY, STOREKEY, V> nodeStore,
+                     final int pageSize)
     {
         this.pageSize = pageSize;
         this.nodeStore = nodeStore;
@@ -66,12 +66,11 @@ implements List<V>
         getHead();
     }
     
-    public PagedList(final NodeStore<STOREKEY, STOREKEY, V> nodeStore,
-                     final STOREKEY headKey)
+    public PagedList(final STOREKEY headKey,
+                     final NodeStore<STOREKEY, STOREKEY, V> nodeStore)
     {
-        this(nodeStore, headKey, 100);
+        this(headKey, nodeStore, 100);
     }
-    
     
     private Node<STOREKEY, STOREKEY> getHead()
     {

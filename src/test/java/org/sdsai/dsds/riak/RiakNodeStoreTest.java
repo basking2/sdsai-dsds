@@ -61,7 +61,7 @@ public class RiakNodeStoreTest {
         {
             final IRiakClient riakClient = RiakFactory.httpClient();
 
-            ns = new RiakNodeStore(riakClient, nodeBucket, dataBucket, String.class);
+            ns = new RiakNodeStore<String, String>(riakClient, nodeBucket, dataBucket, String.class);
 
             bt = new BTree<String, String, String>("btRoot", ns, 1);
 
