@@ -1,22 +1,22 @@
 /**
  * Copyright (c) 2011, Samuel R. Baskinger <basking2@yahoo.com>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy  of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included 
+ * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 package org.sdsai.dsds;
@@ -31,6 +31,7 @@ import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
 import java.util.Iterator;
@@ -43,11 +44,11 @@ import static java.util.Collections.binarySearch;
 
 /**
  * <p>A B-Tree that uses a {@link NodeStore} object to persist {@link Node}s
- * and user data to blob storage. This is tailored to NoSQL 
+ * and user data to blob storage. This is tailored to NoSQL
  * document / key-value systems.</p>
  *
  * <p>There is no concurrency built into this object so edits to a BTree must
- * be coordinated through a locking mechanism or some otherwise atomic 
+ * be coordinated through a locking mechanism or some otherwise atomic
  * service. Developers looking to add transactionality should consider
  * implementing a {@link NodeStore} to collect and atomically batch-update
  * edits.</p>
@@ -58,72 +59,72 @@ import static java.util.Collections.binarySearch;
  *        and must be able to generate a STOREKEY for storing internal nodes.
  * @param V The user value type. Sett {@link Map} for its use.
  */
-public class BTree<K,STOREKEY, V> implements Map<K,V>
+public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<K,V>
 {
     /**
      * The key to store and retrieve the root key.
      */
     private STOREKEY rootKey;
-    
+
     /**
      * The storage engine.
      */
     private NodeStore<K, STOREKEY, V> nodeStore;
-    
+
     /**
      * The minimum data stored in an internal node. Per the B-Tree definition
      * the root node is the exception to this rule. It may have less.
      */
     private int minData;
-    
+
     /**
      * The index of the first element split into a left node. 0.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int leftDataStart;
-    
+
     /**
      * The exclusive index of the last element split into a left node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int leftDataEnd;
-    
+
     /**
      * The index of the first element split into a left node. 0.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int leftChildStart;
-    
+
     /**
      * The exclusive index of the last element split into a left node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int leftChildEnd;
-    
+
     /**
      * The index of the center data index.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int middleData;
-    
+
     /**
      * The index of the first element split into a right node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int rightDataStart;
-    
+
     /**
      * The exclusive index of the last element split into a right node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int rightDataEnd;
-    
+
     /**
      * The index of the first element split into a right node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
      */
     private int rightChildStart;
-    
+
     /**
      * The exclusive index of the last element split into a right node.
      * Used in node splitting. Set by {@link #updateIndexes()}.
@@ -138,13 +139,13 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     {
         this(rootKey, nodeStore, 100);
     }
-    
+
     /**
      * <p>Attempt to retrieve the root node stored at the {@code rootKey}
      * or, if none is found, construct a new empty root node
      * with {@code minData*2} as the size of the {@code maxData} value to the
      * {@link Node}'s constructors.</p>
-     * 
+     *
      * <p>The {@code rootKey} will never be altered where as internal nodes
      *    are not guaranteed to have the same key.</p>
      *
@@ -152,7 +153,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * @param nodeStore The storage engine.
      * @param minData The minimum amount of data that this BTree will store
      *        in a {@link Node}. The maximum data will be {@code minData*2+1}
-     *        and the number of child {@link Node}s will be one more than that. 
+     *        and the number of child {@link Node}s will be one more than that.
      */
     public BTree(final K rootKey,
                  final NodeStore<K, STOREKEY, V> nodeStore,
@@ -163,7 +164,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         this.minData = minData;
         updateIndexes();
     }
-    
+
     /**
      * Load the root node into this BTree from {@link NodeStore} or,
      * if no node is found, create it.
@@ -173,7 +174,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     private Node<K, STOREKEY> getRoot()
     {
         Node<K, STOREKEY> root;
-        
+
         try {
             root = nodeStore.loadNode(rootKey);
             this.minData = root.getDataCap() / 2;
@@ -182,12 +183,12 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             root = newNode();
             nodeStore.store(rootKey, root);
         }
-        
+
         return root;
     }
-    
+
     /**
-     * Any time minData is updated this is called to 
+     * Any time minData is updated this is called to
      * recompute where a Node is split.
      */
     private void updateIndexes() {
@@ -201,20 +202,20 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         this.rightChildStart = minData+1;
         this.rightChildEnd = 2*minData+2;
     }
-    
+
     /**
      * Check the {@link NodeStore} for the given key.
      * @return true of the key is found in the {@link NodeStore}.
      */
     @Override
     @SuppressWarnings("unchecked")
-    public boolean containsKey(Object key) { 
+    public boolean containsKey(Object key) {
         return null != nodeStore.loadData(nodeStore.convert((K)key));
     }
-    
+
     /**
      * Clears the datastructure by doing a depth-first node traversal
-     * to delete all the user data and the node data from 
+     * to delete all the user data and the node data from
      * the {@link NodeStore}. This uses {@link #eachDepthFirst}
      * to visit each node. Notice that this will <em>not</em> delete
      * the root {@link Node} key as other pieces of code may
@@ -222,24 +223,24 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      */
     @Override
     public void clear() {
-    
+
         eachDepthFirst(new NodeFunction<K,STOREKEY>(){
             public boolean call(final Node<K, STOREKEY> n) {
                 for (final K k : n.getData()) {
                     nodeStore.removeData(nodeStore.convert(k));
                 }
-                
+
                 for (final STOREKEY k : n.getChildren()) {
                     nodeStore.removeNode(k);
                 }
-                
+
                 return true;
             }
         });
     }
-    
+
     /**
-     * Whereas clearing will destroy all but the root node, 
+     * Whereas clearing will destroy all but the root node,
      * this method calls {@link #clear()} and deletes the root node key.
      */
     public void destroy()
@@ -247,22 +248,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         clear();
         nodeStore.removeNode(rootKey);
     }
-    
+
     /**
-     * Recrusively depth-first execute 
+     * Recrusively depth-first execute
      * {@link NodeFunction#call(Node)} on each. This is used by
      * {@link #clear} to destroy the datastructure in an orderly way.
      * This is the same order provided by {@link #getNodeIterator}
      * and {@link NodeLocation}.
-     * 
+     *
      */
     public void eachDepthFirst(final NodeFunction<K,STOREKEY> callable)
     {
         eachDepthFirst(callable, getRoot());
     }
-    
+
     /**
-     * A private helper function for 
+     * A private helper function for
      * {@link #eachDepthFirst(final NodeFunction<K, STOREKEY> callable)}
      */
     private boolean eachDepthFirst(final NodeFunction<K,STOREKEY> callable,
@@ -272,7 +273,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             if ( ! eachDepthFirst(callable, nodeStore.loadNode(k)) )
                 return false;
         }
-        
+
         return callable.call(root);
     }
 
@@ -281,20 +282,20 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      */
     @Override
     public boolean containsValue(Object value) {
-        
+
         if ( value == null ) {
             return false;
         }
 
         final Iterator<K> itr = getIterator();
-        
+
         while (itr.hasNext()) {
             final K k = itr.next();
             if ( value.equals( nodeStore.loadData(nodeStore.convert(k)) ) ) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -304,7 +305,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     @Override
     public Set<Map.Entry<K,V>> entrySet(){
         return new AbstractSet<Map.Entry<K,V>>(){
-        
+
             @Override
             public Iterator<Map.Entry<K,V>> iterator() {
                 return new Iterator<Map.Entry<K,V>>() {
@@ -321,35 +322,35 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                         {
                             final private K key = iterator.next();
                             private V value = null;
-                            
+
                             @Override
                             public boolean equals(Object o)
                             {
                                 if ( o == null )
                                     return false;
-                                    
+
                                 @SuppressWarnings("unchecked")
                                 final Map.Entry<K,V> m2 = (Map.Entry<K,V>) o;
-                                
-                                return 
+
+                                return
                                     (this.getKey()==null?
                                         m2.getKey()==null
                                         :
-                                        this.getKey().equals(m2.getKey())) 
+                                        this.getKey().equals(m2.getKey()))
                                     &&
                                     (this.getValue()==null?
                                         m2.getValue() == null
                                         :
                                         this.getValue().equals(m2.getValue()));
-                                    
+
                             }
-                            
+
                             @Override
                             public K getKey()
                             {
                                 return key;
                             }
-                            
+
                             @Override
                             public V getValue()
                             {
@@ -358,15 +359,15 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                                     value = nodeStore.loadData(
                                         nodeStore.convert(key));
                                 }
-                                
+
                                 return value;
                             }
-                            
+
                             @Override
                             public int hashCode(){
                                 return key.hashCode();
                             }
-                            
+
                             @Override
                             public V setValue(final V value)
                             {
@@ -382,7 +383,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     }
                 };
             }
-            
+
             public int size() {
                 return BTree.this.size();
             }
@@ -396,28 +397,28 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     public boolean equals(Object o) {
         if ( o == null )
             return false;
-            
+
         if ( ! ( o instanceof BTree ) )
             return false;
-            
+
         @SuppressWarnings("unchecked")
         final BTree<? extends K, ? extends STOREKEY, ? extends V> that =
             (BTree<? extends K, ? extends STOREKEY, ? extends V>) o;
-        
+
         return this.rootKey.equals(that.rootKey);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public Set<K> keySet() { 
+    public Set<K> keySet() {
         return new AbstractSet<K>(){
             @Override
             public Iterator<K> iterator() {
                 return BTree.this.getIterator();
             }
-            
+
             public int size() {
                 return BTree.this.size();
             }
@@ -451,10 +452,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     public boolean isEmpty(){
         return getRoot().getData().isEmpty();
     }
-    
+
     /**
      * Returns a node constructed for use in a BTree.
-     * Specifically {@code child = minData*2+2} and 
+     * Specifically {@code child = minData*2+2} and
      * {@code data = minData*2+1} and {@code ancestors = 0}.
      *
      * @return a node constructed for use in a BTree.
@@ -464,7 +465,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         // child, data, ancestors
         return new Node<K, STOREKEY>(minData*2+2, minData*2+1, 0);
     }
-    
+
     /**
      * Put the value into the BTree stored in the {@link NodeStore}.
      * This first checks for the object in {@link NodeStore}. If it already
@@ -479,7 +480,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     public V put(final K key, final V value)
     {
         final STOREKEY storeKey = nodeStore.convert(key);
-        
+
         // If the key is already in the store, we are only replacing it.
         // We have hard work to do only when a new key is added.
         if ( containsKey(key) ) {
@@ -487,40 +488,40 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             nodeStore.store(storeKey, value);
             return v;
         }
-        
+
         // A new key is being added.
         final NodeContext ctx = new NodeContext();
         int insertionPoint = -1;
-        
+
         while ( ! ctx.node.isLeaf() ) {
 
             ctx.conditionallySplit(insertionPoint, key, storeKey);
-            
+
             // the index of the search key, if it is contained in the list ;
             //   otherwise, (-(insertion point) - 1)
             final int index = binarySearch(ctx.node.getData(), key, null);
-            
+
             insertionPoint = -(index+1);
-            
+
             ctx.descend(insertionPoint);
         }
-        
+
         // We've stepped into a leaf.
         ctx.conditionallySplit(insertionPoint, key, storeKey);
 
         final int index = binarySearch(ctx.node.getData(), key, null);
-        
+
         insertionPoint = -(index+1);
-        
+
         ctx.node.getData().add(insertionPoint, key);
         nodeStore.store(storeKey, value);
         nodeStore.store(ctx.nodeKey, ctx.node);
-    
+
         // We've already determined that there is not already a value.
         // So this is always null.
-        return null; 
+        return null;
     }
-    
+
     /**
      * Calls {@link Map#entrySet()} and {@link #put}s each elment.
      */
@@ -530,12 +531,12 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             put(me.getKey(), me.getValue());
         }
     }
-    
+
     /**
      * Removes the object from the {@link NodeStore} and restructures
      * the BTree.
      *
-     * @return the object stored at {@code keyObject} in 
+     * @return the object stored at {@code keyObject} in
      * the {@link NodeStore}.
      *
      * @throws ClassCastException if {@code keyObject} is not a key.
@@ -545,13 +546,13 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         @SuppressWarnings("unchecked")
         final K userKey = (K) keyObject;
         final STOREKEY storeKey = nodeStore.convert(userKey);
-        
+
         final V v = nodeStore.loadData(storeKey);
 
         if ( v == null ) {
             return null;
         }
-        
+
         final NodeContext ctx = new NodeContext();
 
         // Notice we never conditionallyCollapse the root node.
@@ -559,34 +560,34 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         //System.out.println("----------------"+storeKey);
 
         boolean deleted = false;
-        
+
         // Calls to internalNodeDelete can force us to continue searching
         // by setting deleted to false.
         while ( ! deleted ) {
-        
+
             // Find the key (or -(insertionPoint+1)).
             // This is called once to initialize and once if internalNodeDelete
             // return false.
             int index = binarySearch(ctx.node.getData(), userKey, null);
-        
+
             // While the key is in a child node.
             while ( index < 0 ) {
-            
+
                 //System.out.println("-----------------------------"+ctx.node);
                 //System.out.println("--|"+index);
 
                 final int insertionPoint = -(index+1);
-                
+
                 ctx.descend(insertionPoint);
 
                 // Now the insetionPoint is really the parentInsertionPoint.
                 // Pass it to the conditionallyCollapse method.
                 ctx.conditionallyCollapse(insertionPoint);
-                
+
                 // Setup for the next iteration. Did we find a node with the key?
                 index = binarySearch(ctx.node.getData(), userKey, null);
             }
-            
+
             //System.out.println("----------------------------+"+ctx.node);
             // When here the index is positive and is the location of the key.
 
@@ -599,10 +600,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                 deleted = internalNodeDelete(ctx, storeKey, index);
             }
         }
-        
+
         return v;
     }
-    
+
     /**
      * <p>
      * This is called when the {@code storeKey} is found by {@link #remove}
@@ -629,22 +630,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         final STOREKEY rightChildKey = ctx.node.getChildren().get(index+1);
         final Node<K, STOREKEY> leftChild = nodeStore.loadNode(leftChildKey);
         final Node<K, STOREKEY> rightChild = nodeStore.loadNode(rightChildKey);
-        
+
         if ( leftChild.getData().size() == minData ) {
             if ( rightChild.getData().size() == minData ) {
-            
+
                 leftChild.getData().add(ctx.node.getData().remove(index));
                 leftChild.getData().addAll(rightChild.getData());
-                
+
                 ctx.node.getChildren().remove(index+1);
-                
+
                 if (! leftChild.isLeaf())
                     leftChild.getChildren().addAll(rightChild.getChildren());
 
                 nodeStore.store(ctx.nodeKey, ctx.node);
                 nodeStore.store(leftChildKey, leftChild);
                 nodeStore.removeNode(rightChildKey);
-                
+
                 return false;
             } else {
                 final NodeContext rctx = new NodeContext(ctx.nodeKey,
@@ -666,10 +667,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             nodeStore.store(ctx.nodeKey, ctx.node);
             nodeStore.removeData(storeKey);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Remove the maximum (right-most) data key
      * from the subtree denoted by this node context.
@@ -683,14 +684,14 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             ctx.descend(index);
             ctx.conditionallyCollapse(index);
         }
-        
+
         final K key = ctx
             .node
             .getData()
             .remove(ctx.node.getData().size()-1);
-        
+
         nodeStore.store(ctx.nodeKey, ctx.node);
-        
+
         return key;
     }
 
@@ -706,14 +707,14 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             ctx.descend(0);
             ctx.conditionallyCollapse(0);
         }
-        
+
         final K key = ctx.node.getData().remove(0);
-        
+
         nodeStore.store(ctx.nodeKey, ctx.node);
-        
+
         return key;
     }
-    
+
     /**
      * Iterate through the entire datastrucuture and counts each element.
      * Avoid using this.
@@ -722,7 +723,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     public int size() {
         final Integer[] i = new Integer[1];
         i[0] = 0;
-        
+
         eachDepthFirst(new NodeFunction<K, STOREKEY>(){
             @Override
             public boolean call(final Node<K, STOREKEY> n) {
@@ -730,10 +731,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                 return true;
             }
         } );
-        
+
         return i[0];
     }
-    
+
     /**
      * Iterate through then entire datastructure and retrieves each
      * element.
@@ -763,13 +764,13 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     }
                 };
             }
-            
+
             public int size() {
                 return BTree.this.size();
             }
         };
     }
-    
+
     /**
      * A private class to hold the current node and its parent node.
      * This also defines a few useful utility methods.
@@ -780,7 +781,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         public Node<K, STOREKEY> node;
         public STOREKEY parentKey;
         public Node<K, STOREKEY> parent;
-        
+
         /**
          * Construct a new NodeContext that has a null parent
          * and a node pointing to the root of the {@link BTree}.
@@ -788,7 +789,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         public NodeContext() {
             this(null, null, rootKey, getRoot());
         }
-        
+
         /**
          * Consturct a NodeContext with the given parent and node values.
          *
@@ -807,7 +808,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             this.parentKey = parentKey;
             this.parent = parent;
         }
-        
+
         /**
          * If {@code node} is not null and has the minimum data lements in it
          * it will steal a key and node subtree from a neighbor and
@@ -833,7 +834,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                 Node<K, STOREKEY> rightSibling = null;
                 int leftSiblingDataSize = -1;
                 int rightSiblingDataSize = -1;
-            
+
                 if ( parentInsertionPoint > 0 ) {
                     leftSiblingKey = parent
                         .getChildren()
@@ -849,7 +850,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     rightSibling = nodeStore.loadNode(rightSiblingKey);
                     rightSiblingDataSize = rightSibling.getData().size();
                 }
-                
+
                 // Check for a merge opportunity. Avoids a log-n delete min/max.
                 if ( leftSiblingDataSize == minData ) {
                     // Collapse left.
@@ -859,11 +860,11 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     leftSibling.getData().add(
                         parent.getData().remove(parentInsertionPoint-1));
                     leftSibling.getData().addAll(node.getData());
-                    
+
                     // remove node and data from parent.
                     parent.getChildren().remove(parentInsertionPoint);
                     nodeStore.removeNode(nodeKey);
-                    
+
                     // node is now inside the left sibling, so replace node.
                     node = leftSibling;
 
@@ -878,9 +879,9 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                         nodeKey = leftSiblingKey;
                         nodeStore.store(parentKey, parent);
                     }
-                    
+
                     nodeStore.store(nodeKey, node);
-                    
+
                 } else if ( rightSiblingDataSize == minData ) {
                     // Collapse the right node into node.
                     // Add data to node.
@@ -889,11 +890,11 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     node.getData().add(
                         parent.getData().remove(parentInsertionPoint));
                     node.getData().addAll(rightSibling.getData());
-                    
+
                     // Remove right sibling.
                     parent.getChildren().remove(parentInsertionPoint+1);
                     nodeStore.removeNode(rightSiblingKey);
-                    
+
                     if ( parent.getData().size() == 0 ) {
                         nodeStore.removeNode(nodeKey);
                         // Note, the root key must always be static.
@@ -903,15 +904,15 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     } else {
                         nodeStore.store(parentKey, parent);
                     }
-                    
+
                     // write results
                     nodeStore.store(nodeKey, node);
-                    
+
                     // NOTE: We do not reassign node because the right
                     // sibling is collapsed into the current node.
                 } else if ( leftSiblingDataSize > minData ) {
                     if ( ! leftSibling.isLeaf() ) {
-                        final STOREKEY leftChild = 
+                        final STOREKEY leftChild =
                             leftSibling.getChildren().remove(
                                 leftSibling.getChildren().size()-1);
                         node.getChildren().add(0, leftChild);
@@ -947,13 +948,13 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     nodeStore.store(rightSiblingKey, rightSibling);
                     nodeStore.store(parentKey, parent);
                 }
-                
+
                 return true;
             }
-            
+
             return false;
         }
-        
+
         /**
          * <p>Split the node if {@link Node#isDataFull()} is true.
          *
@@ -966,7 +967,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         {
             if ( node.isDataFull() ) {
                 //System.out.println("Split "+parentInsertionPoint);
-            
+
                 final Node<K, STOREKEY> left = newNode();
                 final Node<K, STOREKEY> right = newNode();
 
@@ -974,10 +975,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     node.getData().subList(rightDataStart, rightDataEnd));
                 left.getData().addAll(
                     node.getData().subList(leftDataStart, leftDataEnd));
-                    
+
                 assert(left.getData().size() == minData);
                 assert(right.getData().size() == minData);
-                
+
                 if ( ! node.isLeaf() ) {
                     left.getChildren().addAll(
                         node.getChildren().subList(
@@ -985,15 +986,15 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     right.getChildren().addAll(
                         node.getChildren().subList(
                             rightChildStart, rightChildEnd));
-                        
+
                     assert(left.getChildren().size() == minData+1);
                     assert(right.getChildren().size() == minData+1);
                 }
-                
+
                 final STOREKEY leftKey = nodeStore.generateKey(left, null);
                 final STOREKEY rightKey = nodeStore.generateKey(right, null);
                 final K dataKey = node.getData().get(middleData);
-                                    
+
                 if ( atRoot() ) {
                     //System.out.println("SPLIT ROOT.");
                     // restructure the node.
@@ -1002,11 +1003,11 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     node.getData().add(dataKey);
                     node.getChildren().add(leftKey);
                     node.getChildren().add(rightKey);
-                    
+
                     // We will exit this split in a child node. Set the parent.
                     parent = node;
                     parentKey = nodeKey;
-                    
+
                 } else {
                     //System.out.println("SPLIT NON_ROOT.");
                     parent.getData().add(parentInsertionPoint, dataKey);
@@ -1016,12 +1017,12 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                     // Parent isn't changing. However, this node is gone.
                     nodeStore.removeNode(nodeKey);
                 }
-                
+
                 // Store the changes.
                 nodeStore.store(parentKey, parent);
                 nodeStore.store(rightKey, right);
                 nodeStore.store(leftKey, left);
-                
+
                 // pick the left or right child as the current node to be in.
                 @SuppressWarnings("unchecked")
                 final Comparable<K> comparableDataKey = (Comparable<K>)dataKey;
@@ -1034,10 +1035,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
                 }
                 return true;
             }
-            
+
             return false;
         }
-        
+
         /**
          * Return true if this context is positioned at the root node.
          * @return true if this context is positioned at the root node.
@@ -1046,11 +1047,11 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         {
             return parent == null;
         }
-        
+
         /**
          * Step this context into a child node. This updates the parent
          * and node information.
-         */      
+         */
         public void descend(final int i)
         {
             parentKey = nodeKey;
@@ -1060,7 +1061,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             node = nodeStore.loadNode(nodeKey);
         }
     }
-    
+
     public BTreeLocation<K,STOREKEY> getStart()
     {
         final BTreeLocation<K, STOREKEY> l = new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).min();
@@ -1071,7 +1072,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
 
         return l;
     }
-    
+
     public BTreeLocation<K ,STOREKEY> getEnd()
     {
         final BTreeLocation<K, STOREKEY> l = new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).max();
@@ -1085,7 +1086,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
 
     /**
      * Return a {@link BTreeLocation} wrapped in an iterator.
-     * This will call {@link BTreeLocation#hasNext()} and 
+     * This will call {@link BTreeLocation#hasNext()} and
      * {@link BTreeLocation#next()} to iterate through this BTree.
      */
     public Iterator<K> getIterator()
@@ -1093,22 +1094,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         return new Iterator<K>()
         {
             private BTreeLocation<K, STOREKEY> nextState = getStart();
-    
+
             public boolean hasNext()
             {
                 return nextState != null && nextState.hasNext();
             }
-            
+
             public K next()
             {
                 nextState = nextState.next();
-                
+
                 if ( nextState == null )
                     throw new NoSuchElementException();
-                
+
                 return nextState.getKey();
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -1119,10 +1120,10 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             }
         };
     }
-    
+
     /**
      * Return a {@link BTreeLocation} wrapped in an iterator.
-     * This will call {@link BTreeLocation#prev()} and 
+     * This will call {@link BTreeLocation#prev()} and
      * {@link BTreeLocation#hasPrev()} to iterator through the BTree
      * in reverse.
      */
@@ -1131,22 +1132,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         return new Iterator<K>()
         {
             private BTreeLocation<K, STOREKEY> prevState = getEnd();
-    
+
             public boolean hasNext()
             {
                 return prevState != null && prevState.hasPrev();
             }
-            
+
             public K next()
             {
                 prevState = prevState.prev();
-                
+
                 if ( prevState == null )
                     throw new NoSuchElementException();
-                
+
                 return prevState.getKey();
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -1157,7 +1158,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             }
         };
     }
-    
+
     public NodeLocation<K, STOREKEY> getStartNode()
     {
         return new NodeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).beforeMin();
@@ -1173,22 +1174,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         return new Iterator<Node<K, STOREKEY>>()
         {
             private NodeLocation<K, STOREKEY> nextState = getStartNode();
-    
+
             public boolean hasNext()
             {
                 return nextState != null && nextState.hasNext();
             }
-            
+
             public Node<K, STOREKEY> next()
             {
                 nextState = nextState.next();
-                
+
                 if ( nextState == null )
                     throw new NoSuchElementException();
-                
+
                 return nextState.getNode();
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -1205,22 +1206,22 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
         return new Iterator<Node<K, STOREKEY>>()
         {
             private NodeLocation<K, STOREKEY> nextState = getEndNode();
-    
+
             public boolean hasNext()
             {
                 return nextState != null && nextState.hasPrev();
             }
-            
+
             public Node<K, STOREKEY> next()
             {
                 nextState = nextState.prev();
-                
+
                 if ( nextState == null )
                     throw new NoSuchElementException();
-                
+
                 return nextState.getNode();
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -1231,27 +1232,27 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             }
         };
     }
-    
+
     public BTreeLocation<K, STOREKEY> getLocation(final K key)
     {
-        BTreeLocation<K, STOREKEY> loc = 
+        BTreeLocation<K, STOREKEY> loc =
             new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0);
-        
+
         int index = binarySearch(loc.node.getData(), key, null);
 
         // This is always overwritten before it is used.
         int insertionPoint = 0;
-        
+
         while ( index < 0 && ! loc.node.isLeaf() ) {
             insertionPoint = -(index+1);
-            
+
             loc = loc.go(insertionPoint).descend();
 
             index = binarySearch(loc.node.getData(), key, null);
         }
-        
+
         insertionPoint = -(index+1);
-        
+
         // If index > 0, we found the exact key. Return.
         return loc.go( (index >= 0 ? index : insertionPoint) );
     }
@@ -1266,5 +1267,82 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     {
         return new BTreeSelection<K, STOREKEY>(
             getLocation(lower), getLocation(upper));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME - sortedMap
+    public Comparator<K> comparator() {
+        return new Comparator<K>() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int compare(K k1, K k2) {
+                return k1.compareTo(k2);
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (o == null) {
+                    return false;
+                }
+
+                if (o.getClass().isInstance(this.getClass())) {
+                    return true;
+                }
+
+                return false;
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME sorted map
+    public K firstKey() {
+        Iterator<K> i = getIterator();
+        if (i.hasNext()) {
+            return i.next();
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME sorted map
+    public K lastKey() {
+        Iterator<K> i = getReverseIterator();
+        if (i.hasNext()) {
+            return i.next();
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME
+    public SortedMap<K, V> headMap(K toKey) {
+        return null; // FIXME
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME
+    public SortedMap<K, V> tailMap(K fromKey) {
+        return null; // FIXME
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    // @Override FIXME
+    public SortedMap<K, V> subMap(K fromKey, K toKey) {
+        return null; // FIXME
     }
 }
