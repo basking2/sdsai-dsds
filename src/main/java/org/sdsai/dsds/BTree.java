@@ -37,6 +37,7 @@ import java.util.concurrent.CancellationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -59,7 +60,7 @@ import static java.util.Collections.binarySearch;
  *        and must be able to generate a STOREKEY for storing internal nodes.
  * @param V The user value type. Sett {@link Map} for its use.
  */
-public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<K,V>
+public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements SortedMap<K,V>
 {
     /**
      * The key to store and retrieve the root key.
@@ -300,16 +301,15 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
     }
 
     /**
-     * {@inheritDoc}
+     * Given an iterator, build a set of {@link Map.Entry} values.
      */
-    @Override
-    public Set<Map.Entry<K,V>> entrySet(){
-        return new AbstractSet<Map.Entry<K,V>>(){
-
+    protected Set<Map.Entry<K, V>> entrySet(final Iterator<K> iterator)
+    {
+        return new AbstractSet<Map.Entry<K,V>>()
+        {
             @Override
             public Iterator<Map.Entry<K,V>> iterator() {
                 return new Iterator<Map.Entry<K,V>>() {
-                    final Iterator<K> iterator = BTree.this.getIterator();
                     @Override
                     public boolean hasNext()
                     {
@@ -394,6 +394,15 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
      * {@inheritDoc}
      */
     @Override
+    public Set<Map.Entry<K,V>> entrySet()
+    {
+        return entrySet(BTree.this.getIterator());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean equals(Object o) {
         if ( o == null )
             return false;
@@ -412,14 +421,20 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
      * {@inheritDoc}
      */
     @Override
-    public Set<K> keySet() {
-        return new AbstractSet<K>(){
+    public Set<K> keySet()
+    {
+        return new AbstractSet<K>()
+        {
+
             @Override
-            public Iterator<K> iterator() {
+            public Iterator<K> iterator()
+            {
                 return BTree.this.getIterator();
             }
 
-            public int size() {
+            @Override
+            public int size()
+            {
                 return BTree.this.size();
             }
         };
@@ -735,28 +750,28 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
         return i[0];
     }
 
-    /**
-     * Iterate through then entire datastructure and retrieves each
-     * element.
-     */
-    @Override
-    public Collection<V> values(){
-        return new AbstractCollection<V>(){
+    protected Collection<V> values(final Iterator<K> iterator)
+    {
+        return new AbstractCollection<V>()
+        {
             @Override
-            public Iterator<V> iterator() {
-                return new Iterator<V>() {
-                    final Iterator<K> iterator = BTree.this.getIterator();
+            public Iterator<V> iterator()
+            {
+                return new Iterator<V>()
+                {
                     @Override
                     public boolean hasNext()
                     {
                         return iterator.hasNext();
                     }
+
                     @Override
                     public V next()
                     {
                         return nodeStore.loadData(
                             nodeStore.convert(iterator.next()));
                     }
+
                     @Override
                     public void remove()
                     {
@@ -769,6 +784,16 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
                 return BTree.this.size();
             }
         };
+    }
+
+    /**
+     * Iterate through then entire datastructure and retrieves each
+     * element.
+     */
+    @Override
+    public Collection<V> values()
+    {
+        return values(getIterator());
     }
 
     /**
@@ -1073,7 +1098,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
         return l;
     }
 
-    public BTreeLocation<K ,STOREKEY> getEnd()
+    public BTreeLocation<K, STOREKEY> getEnd()
     {
         final BTreeLocation<K, STOREKEY> l = new BTreeLocation<K, STOREKEY>(nodeStore, getRoot(), 0).max();
 
@@ -1272,7 +1297,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME - sortedMap
+    @Override
     public Comparator<K> comparator() {
         return new Comparator<K>() {
             /**
@@ -1301,7 +1326,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME sorted map
+    @Override
     public K firstKey() {
         Iterator<K> i = getIterator();
         if (i.hasNext()) {
@@ -1313,7 +1338,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME sorted map
+    @Override
     public K lastKey() {
         Iterator<K> i = getReverseIterator();
         if (i.hasNext()) {
@@ -1325,24 +1350,24 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Map<
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME
+    @Override
     public SortedMap<K, V> headMap(K toKey) {
-        return null; // FIXME
+        return new BTreeView(this, firstKey(), toKey);
     }
 
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME
+    @Override
     public SortedMap<K, V> tailMap(K fromKey) {
-        return null; // FIXME
+        return new BTreeView(this, fromKey, lastKey());
     }
 
     /**
      * {@inheritDoc}
      */
-    // @Override FIXME
+    @Override
     public SortedMap<K, V> subMap(K fromKey, K toKey) {
-        return null; // FIXME
+        return new BTreeView(this, fromKey, toKey);
     }
 }
