@@ -282,6 +282,7 @@ public class BTreeView<K extends Comparable<? super K>, STOREKEY, V> implements 
     {
         return new AbstractSet<K>()
         {
+            int size = -1;
             @Override
             public Iterator<K> iterator()
             {
@@ -291,7 +292,14 @@ public class BTreeView<K extends Comparable<? super K>, STOREKEY, V> implements 
             @Override
             public int size()
             {
-                return BTreeView.this.size();
+                if (size < 0) {
+                    size = 0;
+                    for (Iterator<K> i = BTreeView.this.getIterator(); i.hasNext(); i.next()) {
+                        ++size;
+                    }
+                }
+
+                return size;
             }
         };
     }
