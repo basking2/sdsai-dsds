@@ -385,7 +385,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
             }
 
             public int size() {
-                return BTree.this.size();
+                throw new UnsupportedOperationException("Size on tree selections is not currently supported.");
             }
         };
     }
@@ -435,7 +435,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
             @Override
             public int size()
             {
-                return BTree.this.size();
+                throw new UnsupportedOperationException("Size on tree selections is not currently supported.");
             }
         };
     }
@@ -781,7 +781,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
             }
 
             public int size() {
-                return BTree.this.size();
+                throw new UnsupportedOperationException("Size on tree selections is not currently supported.");
             }
         };
     }
@@ -1352,7 +1352,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
      */
     @Override
     public SortedMap<K, V> headMap(K toKey) {
-        return new BTreeView(this, firstKey(), toKey);
+        return new BTreeView<K, STOREKEY, V>(this, firstKey(), toKey);
     }
 
     /**
@@ -1360,7 +1360,7 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
      */
     @Override
     public SortedMap<K, V> tailMap(K fromKey) {
-        return new BTreeView(this, fromKey, lastKey());
+        return new BTreeView<K, STOREKEY, V>(this, fromKey, lastKey());
     }
 
     /**
@@ -1368,6 +1368,6 @@ public class BTree<K extends Comparable<? super K>, STOREKEY, V> implements Sort
      */
     @Override
     public SortedMap<K, V> subMap(K fromKey, K toKey) {
-        return new BTreeView(this, fromKey, toKey);
+        return new BTreeView<K, STOREKEY, V>(this, fromKey, toKey);
     }
 }

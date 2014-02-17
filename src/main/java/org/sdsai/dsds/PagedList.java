@@ -1,22 +1,22 @@
 /**
  * Copyright (c) 2011, Samuel R. Baskinger <basking2@yahoo.com>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy  of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included 
+ * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 package org.sdsai.dsds;
@@ -49,11 +49,11 @@ implements List<V>
     /**
      */
     private NodeStore<STOREKEY, STOREKEY, V> nodeStore;
-    
+
     /**
      */
     private int pageSize;
-    
+
     public PagedList(final STOREKEY headKey,
                      final NodeStore<STOREKEY, STOREKEY, V> nodeStore,
                      final int pageSize)
@@ -61,21 +61,21 @@ implements List<V>
         this.pageSize = pageSize;
         this.nodeStore = nodeStore;
         this.headKey = headKey;
-        
+
         // Force a loading/creation of the node.
         getHead();
     }
-    
+
     public PagedList(final STOREKEY headKey,
                      final NodeStore<STOREKEY, STOREKEY, V> nodeStore)
     {
         this(headKey, nodeStore, 100);
     }
-    
+
     private Node<STOREKEY, STOREKEY> getHead()
     {
         Node<STOREKEY, STOREKEY> root;
-        
+
         try
         {
             root = nodeStore.loadNode(headKey);
@@ -86,11 +86,11 @@ implements List<V>
             root = newNode(headKey, headKey);
             nodeStore.store(headKey, root);
         }
-        
+
         return root;
     }
 
-    private Node<STOREKEY, STOREKEY> 
+    private Node<STOREKEY, STOREKEY>
     newNode(final STOREKEY prev, final STOREKEY next)
     {
         // child, data, ancestors
@@ -100,32 +100,32 @@ implements List<V>
         n.getChildren().add(next);
         return n;
     }
-    
+
     private boolean isHead(final STOREKEY storeKey)
     {
         return headKey.equals(storeKey);
     }
-    
+
     private STOREKEY nextKey(final Node<STOREKEY, STOREKEY> node)
     {
         return node.getChildren().get(0);
     }
-    
+
     private STOREKEY prevKey(final Node<STOREKEY, STOREKEY> node)
     {
         return node.getAncestors().get(0);
     }
-    
+
     private int pageFill(final Node<STOREKEY, STOREKEY> node)
     {
         return node.getData().size();
     }
-    
+
     public void eachPage(final NodeFunction<STOREKEY, STOREKEY> nodeFunction)
     {
         eachPage(nodeFunction, headKey);
     }
-    
+
     public void eachPage(final NodeFunction<STOREKEY, STOREKEY> nodeFunction,
                          final STOREKEY startKey)
     {
@@ -134,39 +134,39 @@ implements List<V>
         do
         {
             final Node<STOREKEY, STOREKEY> node = nodeStore.loadNode(nextKey);
-            
+
             if ( !nodeFunction.call(node) )
                 return;
-            
+
             nextKey = nextKey(node);
-        }            
+        }
         while ( ! startKey.equals(nextKey) );
     }
-    
+
     public Iterator<Node<STOREKEY, STOREKEY>> reversePageIterator()
     {
         return new Iterator<Node<STOREKEY, STOREKEY>>()
         {
             STOREKEY nextKey = prevKey(getHead());
             final STOREKEY stopKey = nextKey;
-            
+
             public boolean hasNext()
             {
                 return nextKey != null;
             }
-            
+
             public Node<STOREKEY, STOREKEY> next()
             {
                 final Node<STOREKEY, STOREKEY> n = nodeStore.loadNode(nextKey);
-                
+
                 nextKey = PagedList.this.prevKey(n);
-                
+
                 if ( stopKey.equals(nextKey) )
                     nextKey = null;
-                
+
                 return n;
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -174,33 +174,33 @@ implements List<V>
             public void remove()
             {
                 throw new UnsupportedOperationException();
-            } 
+            }
         };
     }
-    
+
     public Iterator<Node<STOREKEY, STOREKEY>> pageIterator()
     {
         return new Iterator<Node<STOREKEY, STOREKEY>>()
         {
             STOREKEY nextKey = headKey;
-            
+
             public boolean hasNext()
             {
                 return nextKey != null;
             }
-            
+
             public Node<STOREKEY, STOREKEY> next()
             {
                 final Node<STOREKEY, STOREKEY> n = nodeStore.loadNode(nextKey);
-                
+
                 nextKey = PagedList.this.nextKey(n);
-                
+
                 if ( headKey.equals(nextKey) )
                     nextKey = null;
-                
+
                 return n;
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -208,10 +208,10 @@ implements List<V>
             public void remove()
             {
                 throw new UnsupportedOperationException();
-            } 
+            }
         };
     }
-    
+
     /**
      * Used when appending data. This will
      * create an empty list page with the assumption that future
@@ -225,7 +225,7 @@ implements List<V>
     {
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
         final STOREKEY key = nodeStore.generateKey(node, null);
-        
+
         if ( prevKey.equals(nextKey) )
         {
             // When a list is small, prev and next can be the same.
@@ -234,23 +234,23 @@ implements List<V>
             nextNode.getChildren().set(0, key);
             prevNode.getAncestors().set(0, key);
             nextNode.getAncestors().set(0, key);
-            
+
             nodeStore.store(prevKey, prevNode);
         }
         else
         {
             prevNode.getChildren().set(0, key);
             nextNode.getAncestors().set(0, key);
-            
+
             nodeStore.store(prevKey, prevNode);
             nodeStore.store(nextKey, nextNode);
         }
-        
+
         nodeStore.store(key, node);
-        
+
         return new PagedListLocation<STOREKEY>(nodeStore, key, node);
     }
-    
+
     /**
      * Splits the given list node and inserts a
      * new page after it. That new PagedListLocation is returned.
@@ -263,8 +263,8 @@ implements List<V>
         final Node<STOREKEY, STOREKEY> node = newNode(prevKey, nextKey);
 
         final STOREKEY key = nodeStore.generateKey(node, null);
-        
-        final List<STOREKEY> l = 
+
+        final List<STOREKEY> l =
             prevNode.getData().subList(pageSize/2, prevNode.getData().size());
 
         // Move data into new node
@@ -282,28 +282,28 @@ implements List<V>
             nextNode.getChildren().set(0, key);
             prevNode.getAncestors().set(0, key);
             nextNode.getAncestors().set(0, key);
-            
+
             nodeStore.store(prevKey, prevNode);
         }
         else
         {
             prevNode.getChildren().set(0, key);
             nextNode.getAncestors().set(0, key);
-            
+
             nodeStore.store(prevKey, prevNode);
             nodeStore.store(nextKey, nextNode);
         }
-        
+
         nodeStore.store(key, node);
-        
+
         return new PagedListLocation<STOREKEY>(nodeStore, key, node);
     }
-    
+
     /**
      * <p>Merge {@code loc} into {@code prevLoc}.</p>
      *
      * <p>If {@link PagedListLocation#getKey()} returns equal values
-     *    from both {@code loc} and {@code prevLoc}, then no merge is 
+     *    from both {@code loc} and {@code prevLoc}, then no merge is
      *    performed.</p>
      *
      * <p>If {@code loc}'s key is the head key ({@code loc} is the head node
@@ -322,13 +322,13 @@ implements List<V>
         // This also catches lists of page-size=1.
         if ( prevLoc.getKey().equals(loc.getKey()) )
             return;
-        
+
         if ( loc.size() > 0 )
             prevLoc.getNode().getData().addAll(loc.getNode().getData());
 
         // If next and prev are equals, we are producing a single node list.
         // This changes how we updated and store nodes.
-        // NOTE: Because we cannot merge loc into prevLoc 
+        // NOTE: Because we cannot merge loc into prevLoc
         //       (previous if check), merges to a single node will always
         //       have prevLoc and nextLoc share a key.
         if ( prevLoc.getKey().equals(nextLoc.getKey()) )
@@ -342,7 +342,7 @@ implements List<V>
             nextLoc.getNode().getAncestors().set(0, prevLoc.getKey());
             nextLoc.store();
         }
-        
+
         prevLoc.store();
         loc.remove();
     }
@@ -353,9 +353,9 @@ implements List<V>
      */
     private PagedListLocation<STOREKEY> findLastInsertionPoint()
     {
-        final PagedListLocation<STOREKEY> ctx = 
+        final PagedListLocation<STOREKEY> ctx =
             new PagedListLocation<STOREKEY>(nodeStore, headKey).prev();
-        
+
         return ctx.index(ctx.size());
     }
 
@@ -364,14 +364,14 @@ implements List<V>
      * the given index is found.
      * @throws ArrayIndexOutOfBoundsException if this index exceeds
      *         the size of this list. That is, the insertionPoint
-     *         may be list.size() which indicates that the item 
+     *         may be list.size() which indicates that the item
      *         will be inserted at the end of the list as the last element.
      */
     private PagedListLocation<STOREKEY> findInsertionPoint(int index)
     {
-        PagedListLocation<STOREKEY> ctx = 
+        PagedListLocation<STOREKEY> ctx =
             new PagedListLocation<STOREKEY>(nodeStore, headKey);
-        
+
         // NOTE: > not >=.
         while (index > ctx.size())
         {
@@ -385,11 +385,11 @@ implements List<V>
                     "Index: "+index+" Size: "+size());
             }
         }
-        
+
         return ctx.index(index);
     }
-    
-    
+
+
     /**
      * Seek to a given location and return that {@link PageListLocation}.
      * This is different than {@link #findInsertionPoint(int)} and
@@ -399,9 +399,9 @@ implements List<V>
      */
     private PagedListLocation<STOREKEY> seek(int index)
     {
-        PagedListLocation<STOREKEY> ctx = 
+        PagedListLocation<STOREKEY> ctx =
             new PagedListLocation<STOREKEY>(nodeStore, headKey);
-        
+
         // NOTE: >= not >.
         while (index >= ctx.size())
         {
@@ -415,10 +415,10 @@ implements List<V>
                     "Index: "+index+" Size: "+size());
             }
         }
-        
+
         return ctx.index(index);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -426,12 +426,12 @@ implements List<V>
     public boolean add(final V value)
     {
         PagedListLocation<STOREKEY> ctx = findLastInsertionPoint();
-        
+
         add(ctx, value);
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -439,10 +439,10 @@ implements List<V>
     public void add(final int index, final V value)
     {
         PagedListLocation<STOREKEY> ctx = findInsertionPoint(index);
-        
+
         add(ctx, value);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -451,10 +451,10 @@ implements List<V>
     {
         if ( c.isEmpty() )
             return false;
-    
+
         return addAll(findLastInsertionPoint(), c);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -463,10 +463,10 @@ implements List<V>
     {
         if ( c.isEmpty() )
             return false;
-            
+
         return addAll(findInsertionPoint(index), c);
     }
-    
+
     /**
      * This assumes that ctx.size() >= pageSize and will
      * return a new PagedListLocation with its index positioned at the next
@@ -476,14 +476,14 @@ implements List<V>
     {
         return nextInsertionPoint( ctx, ctx.next() );
     }
-    
+
     /**
      * This assumes that ctx.size() >= pageSize and will
      * return a new PagedListLocation with its index positioned at the next
      * insertion point.
      */
     private PagedListLocation<STOREKEY> nextInsertionPoint(
-        final PagedListLocation<STOREKEY> ctx, 
+        final PagedListLocation<STOREKEY> ctx,
         final PagedListLocation<STOREKEY> nxt)
     {
         // We want to insert at the end of a node but can't.
@@ -499,10 +499,10 @@ implements List<V>
                              nxt.getKey(),
                              nxt.getNode());
         }
-        else 
+        else
         {
             final int insertionPoint = ctx.getIndex();
-            
+
             // We've run out of space inserting into the middle
             // of a node. Split that node.
             final PagedListLocation<STOREKEY> ctx2 = split(ctx.getKey(),
@@ -519,14 +519,14 @@ implements List<V>
             }
         }
     }
-    
+
     private boolean addAll(PagedListLocation<STOREKEY> ctx,
                            final Collection<? extends V>  c)
     {
         for (final V v : c)
         {
             final STOREKEY vkey = nodeStore.generateKey(null, v);
-            
+
             // If there is no room we must insert an empty page
             // replacing ctx with it.
             if ( ctx.size() >= pageSize )
@@ -537,30 +537,30 @@ implements List<V>
             ctx.getNode().getData().add(ctx.getIndex(), vkey);
 
             ctx.index(ctx.getIndex()+1);
-            
+
             nodeStore.store(vkey, v);
         }
-        
+
         // Save our work.
         nodeStore.store(ctx.getKey(), ctx.getNode());
-        
+
         return true;
     }
-    
+
     private boolean add(PagedListLocation<STOREKEY> ctx, final V v)
     {
         final STOREKEY vkey = nodeStore.generateKey(null, v);
-        
+
         // If there is no room we must insert an empty page
         // replacing ctx with it.
         if ( ctx.size() >= pageSize )
         {
             final PagedListLocation<STOREKEY> nxt = ctx.next();
-            
+
             // An optimization for inserting single items.
             // When inserting a single item at the end of a full node,
             // we may insert the next value at the beginning of the next
-            // node if that node has room. Otherwise we do our normal 
+            // node if that node has room. Otherwise we do our normal
             // new page construction.
             if ( nxt.size() < pageSize && ctx.getIndex() == ctx.size())
             {
@@ -575,15 +575,15 @@ implements List<V>
         ctx.getNode().getData().add(ctx.getIndex(), vkey);
 
         ctx.index(ctx.getIndex()+1);
-        
+
         nodeStore.store(vkey, v);
 
         // Save our work.
         nodeStore.store(ctx.getKey(), ctx.getNode());
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -598,12 +598,12 @@ implements List<V>
 
             for ( final STOREKEY k : node.getData() )
                 nodeStore.removeData(k);
-                
+
             nodeStore.removeNode(nextKey);
-            
+
             nextKey = nextKey(node);
         }
-        
+
         // When here, we've walked around the loop and are back at the head.
 
         // Clear all data.
@@ -615,18 +615,18 @@ implements List<V>
         head.getAncestors().set(0, headKey);
         nodeStore.store(headKey, head);
     }
-    
+
     /**
-     * Clear this list with {@link #clear()} and then delete the 
+     * Clear this list with {@link #clear()} and then delete the
      * empty head node.
      */
     public void destroy()
     {
         clear();
-        
+
         nodeStore.removeNode(headKey);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -634,21 +634,21 @@ implements List<V>
     public boolean contains(final Object o)
     {
         final Iterator<Node<STOREKEY, STOREKEY>> pages = pageIterator();
-        
+
         while (pages.hasNext())
         {
             final Node<STOREKEY, STOREKEY> node = pages.next();
-            
+
             for (final STOREKEY k : node.getData())
             {
                 if ( o.equals(nodeStore.loadData(k)) )
                     return true;
             }
         }
-        
+
         return false;
     }
-   
+
     /**
      * {@inheritDoc}
      */
@@ -657,15 +657,15 @@ implements List<V>
     {
         final boolean[] foundVector = new boolean[c.size()];
         final Object[]  findVector = c.toArray();
-        
+
         fill(foundVector, false);
-        
+
         final Iterator<Node<STOREKEY, STOREKEY>> pages = pageIterator();
-        
+
         while (pages.hasNext())
         {
             final Node<STOREKEY, STOREKEY> node = pages.next();
-            
+
             for (final STOREKEY k : node.getData())
             {
                 for (int i = 0; i < findVector.length; i++)
@@ -677,14 +677,14 @@ implements List<V>
                 }
             }
         }
-        
+
         for ( final boolean b : foundVector )
             if ( ! b )
                 return false;
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -693,13 +693,13 @@ implements List<V>
     {
         if ( o == null )
             return false;
-            
+
         if ( ! ( o instanceof PagedList ) )
             return false;
-            
+
         return ((PagedList)o).headKey.equals(headKey);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -708,23 +708,23 @@ implements List<V>
     {
         final int originalSize = index;
         final Iterator<Node<STOREKEY, STOREKEY>> pages = pageIterator();
-        
+
         while (pages.hasNext())
         {
             final Node<STOREKEY, STOREKEY> node = pages.next();
-            
+
             if ( index < node.getData().size() )
             {
                 return nodeStore.loadData(node.getData().get(index));
             }
-            
+
             index -= node.getData().size();
         }
-        
+
         throw new IndexOutOfBoundsException(
             "Index "+originalSize+" in list of size "+size());
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -733,7 +733,7 @@ implements List<V>
     {
         return getHead().getData().isEmpty();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -743,11 +743,11 @@ implements List<V>
         final Iterator<Node<STOREKEY, STOREKEY>> pages = pageIterator();
 
         int index = 0;
-        
+
         while (pages.hasNext())
         {
             final Node<STOREKEY, STOREKEY> node = pages.next();
-            
+
             for (int i = 0; i < node.getData().size(); i++)
             {
                 if (o.equals(nodeStore.loadData(node.getData().get(i))))
@@ -755,62 +755,62 @@ implements List<V>
                     return index + i;
                 }
             }
-            
+
             index += node.getData().size();
         }
-        
+
         return -1;
     }
 
     /**
      * {@inheritDoc}
-     */    
+     */
     @Override
     public Iterator<V> iterator()
     {
         return new Iterator<V>()
         {
-            private PagedListLocation<STOREKEY> location = 
+            private PagedListLocation<STOREKEY> location =
                 new PagedListLocation<STOREKEY>(nodeStore, headKey);
-            
+
             public boolean hasNext()
             {
                 if ( location == null )
                     return false;
-                    
+
                 // There is more data.
                 if ( location.getIndex() < location.size() )
                     return true;
-                    
+
                 // There are more nodes (with data).
                 if ( ! headKey.equals(location.nextKey()) )
                     return true;
-                    
+
                 return false;
             }
-            
+
             public V next()
             {
                 final V v = nodeStore.loadData(
                     location.getNode().getData().get(location.getIndex()));
-                
+
                 // Advance the location.
                 location.index(location.getIndex()+1);
-                
+
                 // Did we run out of data.
                 if ( location.getIndex() >= location.size() )
                 {
                     // Next index 0.
                     location = location.next().index(0);
-                    
+
                     // If we are back at the head, we are done.
                     if ( location.getKey().equals(headKey) )
                         location = null;
                 }
-                
+
                 return v;
             }
-            
+
             /**
              * Unsupported operation.
              * @throws UnsupportedOperationException
@@ -818,10 +818,10 @@ implements List<V>
             public void remove()
             {
                 throw new UnsupportedOperationException();
-            } 
+            }
         };
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -831,13 +831,13 @@ implements List<V>
         final Iterator<Node<STOREKEY, STOREKEY>> pages = reversePageIterator();
 
         int index = size();
-        
+
         while (pages.hasNext())
         {
             final Node<STOREKEY, STOREKEY> node = pages.next();
-            
+
             index -= node.getData().size();
-            
+
             for (int i = node.getData().size()-1; i >= 0; i--)
             {
                 if (o.equals(nodeStore.loadData(node.getData().get(i))))
@@ -846,25 +846,25 @@ implements List<V>
                 }
             }
         }
-        
+
         return -1;
     }
-    
+
     // FIXME
     @Override
     public ListIterator<V> listIterator()
     {
                 throw new UnsupportedOperationException();
     }
-    
+
     // FIXME
     @Override
     public ListIterator<V> listIterator(final int index)
     {
                 throw new UnsupportedOperationException();
     }
-    
-    
+
+
     /**
      * Used by the remove family of methods to
      * remove the data from the {@link NodeStore}.
@@ -881,11 +881,11 @@ implements List<V>
 
         return val;
     }
-    
+
     /**
      * Remove the given location and returns a location
      * positioned at the same global list index that was removed.
-     * The actual object may have a different result for 
+     * The actual object may have a different result for
      * {@link PagedListLocation#getIndex()} or may be a different object.
      */
     private PagedListLocation<STOREKEY>
@@ -893,37 +893,37 @@ implements List<V>
     {
         // Actually do the removal.
         loc.getNode().getData().remove(loc.getIndex());
-        
+
         final PagedListLocation<STOREKEY> prev = loc.prev();
-        
+
         final PagedListLocation<STOREKEY> next = loc.next();
-        
+
         // Can we merge with prev?
         if ( !headKey.equals(loc.getKey())
-          && loc.size() + prev.size() < pageSize 
+          && loc.size() + prev.size() < pageSize
           && ! loc.getKey().equals(prev.getKey()))
         {
-        
+
             int i = prev.getNode().getData().size() + loc.getIndex();
 
             // This will cause a write of the nodes.
             merge(prev, loc, next);
 
             if ( i < prev.size()) {
-                // If i < prev.size() we did not delete the last element. 
+                // If i < prev.size() we did not delete the last element.
                 return prev.index(i);
             } else {
                 // We did delete the last element. Our index is in the next node.
                 return prev.next().index(0);
             }
-            
+
         } // Can we merge with next?
         else if ( !headKey.equals(next.getKey())
                && loc.size() + next.size() < pageSize
                && ! loc.getKey().equals(prev.getKey()))
         {
             final PagedListLocation<STOREKEY> nextNext = next.next();
-            
+
             // This will cause a write of the nodes.
             merge(loc, next, nextNext);
 
@@ -932,11 +932,11 @@ implements List<V>
         else
         {
             nodeStore.store(loc.getKey(), loc.getNode());
-            
+
             return loc;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -948,7 +948,7 @@ implements List<V>
         removeFrom(l);
         return value;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -957,15 +957,15 @@ implements List<V>
     {
         // FIXME - could be faster without the index call and then remove.
         final int i = indexOf(o);
-        
+
         if ( i < 0 )
             return false;
-        
+
         remove(i);
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -974,17 +974,17 @@ implements List<V>
     {
         if ( c.isEmpty() )
             return false;
-            
+
         boolean altered = false;
 
         for ( Object o : c )
         {
             altered = altered || remove(o);
         }
-        
+
         return altered;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -993,9 +993,9 @@ implements List<V>
     {
         if ( c.isEmpty() )
             return false;
-            
+
         boolean altered = false;
-            
+
         PagedListLocation<STOREKEY> loc =
             new PagedListLocation<STOREKEY>(nodeStore, headKey);
 
@@ -1004,7 +1004,7 @@ implements List<V>
             for ( int i = 0; i < loc.size(); i++ )
             {
                 final V v = nodeStore.loadData(loc.getNode().getData().get(i));
-                
+
                 if (!c.contains(v))
                 {
                     removeData(loc);
@@ -1012,14 +1012,14 @@ implements List<V>
                     altered = true;
                 }
             }
-            
+
             loc = loc.next();
         }
         while( ! loc.getKey().equals(headKey) );
-        
+
         return altered;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1027,16 +1027,16 @@ implements List<V>
     public V set(final int index, final V value)
     {
         final PagedListLocation<STOREKEY> ctx = seek(index);
-        
+
         final STOREKEY k = ctx.getNode().getData().get(ctx.getIndex());
 
         final V v = nodeStore.loadData(k);
-        
+
         nodeStore.store(k, value);
-        
+
         return v;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1046,22 +1046,22 @@ implements List<V>
         final Iterator<Node<STOREKEY, STOREKEY>> pages = pageIterator();
 
         int index = 0;;
-        
+
         while (pages.hasNext())
         {
             index += pages.next().getData().size();
         }
-        
+
         return index;
     }
-    
+
     // FIXME
     @Override
     public List<V> subList(final int fromIndex, final int toIndex)
     {
-                throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1069,19 +1069,19 @@ implements List<V>
     public Object[] toArray()
     {
         int size = size();
-        
+
         Object[] o = new Object[size];
-        
+
         int i = 0;
-        
+
         for( final V v : this )
         {
             o[i++] = v;
         }
-        
+
         return o;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1090,20 +1090,30 @@ implements List<V>
     public <T> T[] toArray(T[] t)
     {
         int size = size();
-        
+
         if ( t == null || t.length < size )
         {
             t = (T[]) new Object[size];
         }
-        
+
         int i = 0;
-        
+
         for( final V v : this )
         {
             t[i++] = (T) v;
         }
-        
+
         return t;
+    }
+
+    /**
+     * Return the {@code hashCode()} result of the head key.
+     * @return the {@code hashCode()} result of the head key.
+     */
+    @Override
+    public int hashCode()
+    {
+        return headKey.hashCode();
     }
 }
 

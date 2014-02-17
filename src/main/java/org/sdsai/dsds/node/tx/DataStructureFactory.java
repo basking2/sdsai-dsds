@@ -27,8 +27,8 @@ public class DataStructureFactory
     {
     }
 
-    private static <USERKEY, STOREKEY, VALUE> TransactionalNodeStore<USERKEY, STOREKEY, VALUE> txNodeStore(
-        final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    private static <USERKEY extends Comparable<? super USERKEY>, STOREKEY, VALUE>
+    TransactionalNodeStore<USERKEY, STOREKEY, VALUE> txNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
         if ( nodeStore instanceof TransactionalNodeStore )
         {
@@ -38,7 +38,8 @@ public class DataStructureFactory
         return new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore);
     }
 
-    private static <USERKEY, STOREKEY, VALUE> InvocationHandler buildTxCommittingInvocationHandler(
+    private static <USERKEY extends Comparable<? super USERKEY>, STOREKEY, VALUE>
+    InvocationHandler buildTxCommittingInvocationHandler(
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
         final Object dispatchObject)
     {
@@ -71,7 +72,8 @@ public class DataStructureFactory
         return ivh;
     }
 
-    public static <STOREKEY, VALUE> List<VALUE> pagedList(
+    public static <STOREKEY extends Comparable<? super STOREKEY>, VALUE> List<VALUE>
+    pagedList(
         final STOREKEY root,
         final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore,
         final int size)
@@ -88,7 +90,8 @@ public class DataStructureFactory
         return list;
     }
 
-    public static <STOREKEY, VALUE> List<VALUE> pagedList(
+    public static <STOREKEY extends Comparable<? super STOREKEY>, VALUE> List<VALUE>
+    pagedList(
         final STOREKEY root,
         final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore)
     {
@@ -104,7 +107,8 @@ public class DataStructureFactory
         return list;
     }
 
-    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+    public static <USERKEY extends Comparable<? super USERKEY>, STOREKEY, VALUE> Map<USERKEY, VALUE>
+    bTree(
         final USERKEY root,
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
         final int size)
@@ -121,7 +125,8 @@ public class DataStructureFactory
         return map;
     }
 
-    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+    public static <USERKEY extends Comparable<? super USERKEY>, STOREKEY, VALUE> Map<USERKEY, VALUE>
+    bTree(
         final USERKEY root,
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
