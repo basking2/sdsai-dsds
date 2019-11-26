@@ -1,2 +1,10 @@
-/target
 .*.swp
+.classpath
+.gradle
+.idea
+.project
+.settings
+build
+target
+*.iml
+

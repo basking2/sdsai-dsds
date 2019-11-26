@@ -30,7 +30,7 @@ EXTENDABILITY
 
 NodeStore
 
-The interface  org.sdsai.dsds.node.NodeStore is all that must be implemented
+The interface  com.github.basking2.sdsai.dsds.node.NodeStore is all that must be implemented
 for the data structures to be used with a new storage system.
 
 Data Structures
