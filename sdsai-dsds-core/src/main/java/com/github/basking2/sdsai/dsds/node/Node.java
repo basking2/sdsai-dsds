@@ -33,11 +33,25 @@ import javax.xml.bind.annotation.XmlTransient;
  * storage via a {@link NodeStore}. Notice that a {@link Node}
  * does not posses any knowlede of the key it is stored under.
  * Only it's children or ancestor nodes.
+ *
+ * @param <USERKEY> The user's key.
+ * @param <STOREKEY> The key in the data storage medium.
  */
 public class Node<USERKEY, STOREKEY> implements Serializable
 {
+    /**
+     * The list of keys that point to user data.
+     */
     private List<USERKEY> data;
+
+    /**
+     * The list of keys that point to ancestors.
+     */
     private List<STOREKEY> ancestors;
+
+    /**
+     * The list of keys that point to children.
+     */
     private List<STOREKEY> children;
     
     private int dataCap;
@@ -50,17 +64,35 @@ public class Node<USERKEY, STOREKEY> implements Serializable
     public Node() {
         this(1,1,1);
     }
-    
+
+    /**
+     * Create a Node that can store a number of children, one data keys and one ancestor.
+     *
+     * @param childCap The number of children this Node may have.
+     */
     public Node(final int childCap) {
         this(childCap, 1, 1);
     }
 
+    /**
+     * Create a Node that can store a number of children and data keys and has only one ancestor.
+     *
+     * @param childCap The number of children this Node may have.
+     * @param dataCap The number of data entries this Node may have.
+     */
     public Node(final int childCap,
                 final int dataCap)
     {
         this(childCap, dataCap, 1);
     }
-    
+
+    /**
+     * Create a Node.
+     *
+     * @param childCap The number of children this Node may have.
+     * @param dataCap The number of data elements this Node may have.
+     * @param ancestorsCap The number of ancestors this node may have.
+     */
     public Node(final int childCap,
                 final int dataCap,
                 final int ancestorsCap)
@@ -69,9 +101,9 @@ public class Node<USERKEY, STOREKEY> implements Serializable
         this.dataCap = dataCap;
         this.ancestorsCap = ancestorsCap;
         
-        this.data = new ArrayList<USERKEY>(dataCap);
-        this.children = new ArrayList<STOREKEY>(childCap);
-        this.ancestors = new ArrayList<STOREKEY>(ancestorsCap);
+        this.data = new ArrayList<>(dataCap);
+        this.children = new ArrayList<>(childCap);
+        this.ancestors = new ArrayList<>(ancestorsCap);
     }
     
     public List<USERKEY> getData() {

@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation project(':sdsai-dsds-core')
     implementation platform('software.amazon.awssdk:bom:2.5.29')
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.11.682'
 
     testImplementation 'junit:junit:4.10'
 }

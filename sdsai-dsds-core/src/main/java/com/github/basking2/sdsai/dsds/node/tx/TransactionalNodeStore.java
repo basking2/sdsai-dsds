@@ -18,6 +18,10 @@ import java.util.HashMap;
  * A transaction. This is implemented as a NodeStore in which methods not related
  * to the transaction are directly proxied to the {@link NodeStore} used to
  * initialize this object.
+ *
+ * @param <USERKEY> The user key type.
+ * @param <STOREKEY> The data store key type.
+ * @param <VALUE> The value being stored.
  */
 public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     implements NodeStore<USERKEY, STOREKEY, VALUE>
