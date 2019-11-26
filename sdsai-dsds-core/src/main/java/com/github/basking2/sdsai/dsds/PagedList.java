@@ -390,10 +390,10 @@ implements List<V>
     
     
     /**
-     * Seek to a given location and return that {@link PageListLocation}.
+     * Seek to a given location and return that {@link PagedListLocation}.
      * This is different than {@link #findInsertionPoint(int)} and
      * {@link #findLastInsertionPoint()} in that this returns a
-     * {@link PageListLocation} that points at a valid index where as
+     * {@link PagedListLocation} that points at a valid index where as
      * insertion points may point at an element beyond the end of a list.
      */
     private PagedListLocation<STOREKEY> seek(int index)

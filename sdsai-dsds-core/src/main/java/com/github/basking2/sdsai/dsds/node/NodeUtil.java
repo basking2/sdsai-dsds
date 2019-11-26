@@ -1,5 +1,7 @@
 package com.github.basking2.sdsai.dsds.node;
 
+import com.github.basking2.sdsai.dsds.node.Node;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
