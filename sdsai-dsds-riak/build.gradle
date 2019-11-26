@@ -30,9 +30,11 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
 
     publications {
 
-      mavenJava(MavenPublication) {
+      maven(MavenPublication) {
         groupId = group
         artifactId = 'sdsai-dsds-riak'
+
+        from components.java
 
         pom {
 	  name = "SDSAI DSDS Riak"
@@ -63,7 +65,7 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
   }
 
   signing {
-    sign publishing.publications.mavenJava
+    sign publishing.publications.maven
   }
 }
 

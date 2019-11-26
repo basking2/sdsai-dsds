@@ -32,12 +32,14 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
 
     publications {
 
-      mavenJava(MavenPublication) {
+      maven(MavenPublication) {
         groupId = group
         artifactId = 'sdsai-dsds-common'
 
+        from components.java
+
         pom {
-	  name = "SDSAI DSDS Common"
+          name = "SDSAI DSDS Common"
           description = 'Simple datastructures and algorithms data store data structures.'
           url = 'https://github.com/basking2/sdsai-dsds'
           scm {
@@ -65,7 +67,7 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
   }
 
   signing {
-    sign publishing.publications.mavenJava
+    sign publishing.publications.maven
   }
 }
 
