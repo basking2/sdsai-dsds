@@ -1,3 +1,6 @@
 rootProject.name = 'sdsai-dsds'
 include 'sdsai-dsds-core'
+include 'sdsai-dsds-riak'
+include 'sdsai-dsds-s3'
+include 'sdsai-dsds-mongo'
 
