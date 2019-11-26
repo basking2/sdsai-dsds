@@ -7,7 +7,8 @@ plugins {
 
 dependencies {
     implementation project(':sdsai-dsds-core')
-    implementation 'org.mongodb:mongo-java-driver:2.7.2'
+    implementation platform('software.amazon.awssdk:bom:2.5.29')
+
     testImplementation 'junit:junit:4.10'
 }
 
@@ -32,10 +33,10 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
 
             mavenJava(MavenPublication) {
                 groupId = group
-                artifactId = 'sdsai-dsds-mongo'
+                artifactId = 'sdsai-dsds-s3'
 
                 pom {
-                    name = "SDSAI DSDS Mongo"
+                    name = "SDSAI DSDS S3"
                     description = 'Simple datastructures and algorithms data store data structures.'
                     url = 'https://github.com/basking2/sdsai-dsds'
                     scm {

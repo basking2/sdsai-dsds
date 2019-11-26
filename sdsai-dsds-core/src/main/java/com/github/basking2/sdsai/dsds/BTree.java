@@ -21,11 +21,7 @@
  */
 package com.github.basking2.sdsai.dsds;
 
-import com.github.basking2.sdsai.dsds.node.Node;
-import com.github.basking2.sdsai.dsds.node.NodeFunction;
-import com.github.basking2.sdsai.dsds.node.NodeLocation;
-import com.github.basking2.sdsai.dsds.node.NodeStore;
-import com.github.basking2.sdsai.dsds.node.NodeStoreNodeNotFoundException;
+import com.github.basking2.sdsai.dsds.node.*;
 
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
@@ -48,11 +44,11 @@ import static java.util.Collections.binarySearch;
  * implementing a {@link NodeStore} to collect and atomically batch-update
  * edits.</p>
  *
- * @param K The user key type. See {@link Map} for its use.
- * @param STOREKEY The storage key that K will be transformed in to.
+ * @param <K> The user key type. See {@link Map} for its use.
+ * @param <STOREKEY> The storage key that K will be transformed in to.
  *        The {@link NodeStore} must be able to convert a K to a STOREKEY
  *        and must be able to generate a STOREKEY for storing internal nodes.
- * @param V The user value type. Sett {@link Map} for its use.
+ * @param <V> The user value type. Sett {@link Map} for its use.
  */
 public class BTree<K,STOREKEY, V> implements Map<K,V>
 {
@@ -258,11 +254,13 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     }
     
     /**
-     * A private helper function for 
-     * {@link #eachDepthFirst(final NodeFunction<K, STOREKEY> callable)}
+     * A private helper function.
+     *
+     * @param callable The function to apply.
+     * @param root The root to operate on.
+     * @return True if we should continue. False otherwise.
      */
-    private boolean eachDepthFirst(final NodeFunction<K,STOREKEY> callable,
-                                final Node<K, STOREKEY> root)
+    private boolean eachDepthFirst(final NodeFunction<K,STOREKEY> callable, final Node<K, STOREKEY> root)
     {
         for (final STOREKEY k : root.getChildren()) {
             if ( ! eachDepthFirst(callable, nodeStore.loadNode(k)) )

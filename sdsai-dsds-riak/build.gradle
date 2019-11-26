@@ -3,12 +3,7 @@ plugins {
   id 'maven-publish'
   id 'signing'
   id 'eclipse'
-  id 'net.researchgate.release' version '2.6.0'
 }
-
-release {
-  tagTemplate = '${name}-${version}'
-}  
 
 dependencies {
   implementation project(':sdsai-dsds-core')

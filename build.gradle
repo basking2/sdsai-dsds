@@ -6,6 +6,7 @@ plugins {
   id 'eclipse'
 }
 
+
 allprojects {
   description """Simple datastructures and algorithms Data Store Data Structures."""
   group = 'com.github.basking2'
