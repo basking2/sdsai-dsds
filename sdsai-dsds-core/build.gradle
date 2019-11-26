@@ -67,7 +67,8 @@ if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
   }
 
   signing {
-    sign publishing.publications.maven
+    //sign publishing.publications.maven
+    sign configurations.archives
   }
 }
 
