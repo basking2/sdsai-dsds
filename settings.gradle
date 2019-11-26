@@ -1,0 +1,3 @@
+rootProject.name = 'sdsai-dsds'
+include 'sdsai-dsds-core'
+
