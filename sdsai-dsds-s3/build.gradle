@@ -29,11 +29,6 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
-//java {
-//    withJavadocJar()
-//    withSourcesJar()
-//}
-
 if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
 
     signing {

@@ -11,62 +11,68 @@ dependencies {
     testImplementation 'junit:junit:4.10'
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
 }
 
 if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-    publishing {
+
+    signing {
+        sign configurations.archives
+    }
+
+    uploadArchives {
         repositories {
-            maven {
-                url = version.endsWith('SNAPSHOT') ? snapshotRepository : releaseRepository
-                credentials {
-                    username ossrhUsername
-                    password ossrhPassword
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: releaseRepository) {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
-            }
-        }
 
-        publications {
+                snapshotRepository(url: snapshotRepository) {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
 
-            maven(MavenPublication) {
-                groupId = group
-                artifactId = 'sdsai-dsds-mongo'
+                pom.project {
+                    name 'SDSAI DSDS MongoDB'
+                    packaging 'jar'
+                    // optionally artifactId can be defined here
+                    description 'Simple datastructures and algorithms data store data structures.'
+                    url 'https://github.com/basking2/sdsai-dsds'
 
-                from components.java
-
-                pom {
-                    name = "SDSAI DSDS Mongo"
-                    description = 'Simple datastructures and algorithms data store data structures.'
-                    url = 'https://github.com/basking2/sdsai-dsds'
                     scm {
-                        connection = 'scm:git:git@github.com:basking2/sdsai-dsds.git'
-                        developerConnection = 'git@github.com:basking2/sdsai-dsds.git'
-                        url = 'https://github.com/basking2/sdsai-dsds.git'
+                        connection 'scm:git:git@github.com:basking2/sdsai-dsds.git'
+                        developerConnection 'git@github.com:basking2/sdsai-dsds.git'
+                        url 'https://github.com/basking2/sdsai-dsds.git'
                     }
+
                     licenses {
                         license {
-                            name = "MIT"
-                            url = 'https://opensource.org/licenses/MIT'
+                            name 'MIT'
+                            url 'https://opensource.org/licenses/MIT'
                         }
                     }
 
                     developers {
                         developer {
-                            id = 'basking2'
-                            name = 'Sam'
-                            email = 'basking2@yahoo.com'
+                            id 'basking2'
+                            name 'Sam'
+                            email 'basking2@yahoo.com'
                         }
                     }
                 }
             }
         }
     }
-
-    signing {
-        sign publishing.publications.maven
-    }
 }
-
-
