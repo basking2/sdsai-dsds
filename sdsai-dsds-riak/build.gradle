@@ -1,6 +1,8 @@
 plugins {
   id 'java-library'
-  id 'maven-publish'
+  // Sonatype's Nexus doensn't support the stronger cryptographic hashes.
+  // id 'maven-publish'
+  id 'maven'
   id 'signing'
   id 'eclipse'
 }
