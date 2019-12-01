@@ -170,7 +170,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             root = nodeStore.loadNode(rootKey);
             this.minData = root.getDataCap() / 2;
             updateIndexes();
-        } catch ( final NodeStoreNodeNotFoundException e) {
+        } catch (final NodeStoreNodeNotFoundException e) {
             root = newNode();
             nodeStore.store(rootKey, root);
         }
