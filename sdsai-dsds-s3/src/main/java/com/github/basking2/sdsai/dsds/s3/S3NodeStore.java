@@ -143,11 +143,11 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
 
     @Override
     public S3ObjectId generateKey(final Node<String, S3ObjectId> node, final String str) {
-        return new S3ObjectId(bucket, prefix + UUID.randomUUID().toString());
+        return new S3ObjectId(bucket, UUID.randomUUID().toString());
     }
 
     @Override
     public S3ObjectId convert(final String key) {
-        return new S3ObjectId(bucket, prefix + key);
+        return new S3ObjectId(bucket, key);
     }
 }
