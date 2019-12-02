@@ -11,31 +11,43 @@ import java.util.Map;
 import com.github.basking2.sdsai.dsds.BTree;
 import com.github.basking2.sdsai.dsds.PagedList;
 import com.github.basking2.sdsai.dsds.node.NodeStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Build transactional datastructures using {@link Proxy}.
+ *
+ * Any operation on {@link BTree} or {@link PagedList} or similar may result in several writes to the {@link NodeStore}.
+ * The {@link TransactionalNodeStore} collects those operations and executes them at one time. It also skips operations
+ * that are obviated by later operations. For example, writes are skipped if a delete happens later in the history.
+ * However, {@link TransactionalNodeStore#commit()} must be called manually.
+ *
+ * This set of factories proxy calls to data structures so that they may be wrapped with calls to {@link TransactionalNodeStore#commit()}}.
+ *
  */
 public class DataStructureFactory
 {
+    private static final Logger LOG  = LoggerFactory.getLogger(DataStructureFactory.class);
+
+    private DataStructureFactory()
+    {
+    }
+
     /**
      * Build a new DataStructureFactory.
      *
      * @throws RuntimeException If a TransactionalNodeStore is passed as the nodeStore parameter.
      */
-    private DataStructureFactory()
-    {
-    }
-
     private static <USERKEY, STOREKEY, VALUE> TransactionalNodeStore<USERKEY, STOREKEY, VALUE> txNodeStore(
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
         if ( nodeStore instanceof TransactionalNodeStore )
         {
-            throw new RuntimeException("DataStructureFactory is incompatible with TransactionalNodeStore.");
+            LOG.warn("Use of a TransactionalNodeStore as the input to DataStructureFactory may result in data never being comitted.");
         }
 
-        return new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore);
+        return new TransactionalNodeStore<>(nodeStore);
     }
 
     private static <USERKEY, STOREKEY, VALUE> InvocationHandler buildTxCommittingInvocationHandler(
@@ -76,7 +88,7 @@ public class DataStructureFactory
         final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore,
         final int size)
     {
-        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<STOREKEY, VALUE>(root, nodeStore, size);
+        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<>(root, nodeStore, size);
 
         @SuppressWarnings("unchecked")
         final List<VALUE> list = (List<VALUE>)
@@ -92,7 +104,7 @@ public class DataStructureFactory
         final STOREKEY root,
         final NodeStore<STOREKEY, STOREKEY, VALUE> nodeStore)
     {
-        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<STOREKEY, VALUE>(root, nodeStore);
+        final PagedList<STOREKEY, VALUE> pagedList = new PagedList<>(root, nodeStore);
 
         @SuppressWarnings("unchecked")
         final List<VALUE> list = (List<VALUE>)
@@ -109,7 +121,7 @@ public class DataStructureFactory
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
         final int size)
     {
-        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<USERKEY, STOREKEY, VALUE>(root, nodeStore, size);
+        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<>(root, nodeStore, size);
 
         @SuppressWarnings("unchecked")
         final Map<USERKEY, VALUE> map = (Map<USERKEY, VALUE>)
@@ -125,7 +137,7 @@ public class DataStructureFactory
         final USERKEY root,
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
-        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<USERKEY, STOREKEY, VALUE>(root, nodeStore);
+        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<>(root, nodeStore);
 
         @SuppressWarnings("unchecked")
         final Map<USERKEY, VALUE> map = (Map<USERKEY, VALUE>)

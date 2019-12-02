@@ -26,15 +26,26 @@ import java.util.HashMap;
 public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     implements NodeStore<USERKEY, STOREKEY, VALUE>
 {
-    private NodeStore<USERKEY, STOREKEY, VALUE> nodeStore;
+    private final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore;
 
-    private List<Operation<?, ?>> operations;
+    /**
+     * The list of all operations. Some may be marked as deleted, in which case they will not be executed at commit time.
+     *
+     * This preserves ordering.
+     */
+    private final List<Operation<?, ?>> operations;
 
-    private Map<STOREKEY, Operation<STOREKEY, VALUE>> values;
+    /**
+     * Operations added to {@link #operations} are indexed here so the value can be read or the operation can be obviated.
+     */
+    private final Map<STOREKEY, Operation<STOREKEY, VALUE>> values;
 
-    private Map<STOREKEY, Operation<STOREKEY, Node<USERKEY, STOREKEY>>> nodes;
+    /**
+     * Operations added to {@link #operations} are indexed here so the value can be read or the operation can be obviated.
+     */
+    private final Map<STOREKEY, Operation<STOREKEY, Node<USERKEY, STOREKEY>>> nodes;
 
-    private TransactionalNodeStore<USERKEY, STOREKEY, VALUE> parentTransaction;
+    private final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> parentTransaction;
 
     public TransactionalNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
@@ -47,9 +58,9 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     public TransactionalNodeStore(final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore, final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> parentTransaction)
     {
         this.nodeStore = nodeStore;
-        this.operations = new LinkedList<Operation<?,?>>();
-        this.values = new HashMap<STOREKEY, Operation<STOREKEY, VALUE>>();
-        this.nodes = new HashMap<STOREKEY, Operation<STOREKEY, Node<USERKEY, STOREKEY>>>();
+        this.operations = new LinkedList<>();
+        this.values = new HashMap<>();
+        this.nodes = new HashMap<>();
         this.parentTransaction = parentTransaction;
     }
 
@@ -59,7 +70,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     public void subTransaction(final SubTx<USERKEY, STOREKEY, VALUE> subTx)
     {
         final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> tx =
-            new TransactionalNodeStore<USERKEY, STOREKEY, VALUE>(nodeStore, this);
+            new TransactionalNodeStore<>(nodeStore, this);
 
         subTx.buildTx(tx);
 
@@ -85,7 +96,9 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     {
         for (final Operation<?, ?> o : operations)
         {
-            o.execute();
+            if (!o.isDeleted()) {
+                o.execute();
+            }
         }
 
         operations.clear();
@@ -138,7 +151,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         {
             final VALUE value = nodeStore.loadData(key);
 
-            values.put(key, new CachedReadOperation<STOREKEY, VALUE>(key, value));
+            values.put(key, new CachedReadOperation<>(key, value));
 
             return value;
         }
@@ -174,7 +187,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         {
             final Node<USERKEY, STOREKEY> value = nodeStore.loadNode(key);
 
-            nodes.put(key, new CachedReadOperation<STOREKEY, Node<USERKEY, STOREKEY>>(key, value));
+            nodes.put(key, new CachedReadOperation<>(key, value));
 
             return value;
         }
@@ -208,6 +221,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         if ( nodes.containsKey(key) ) {
             nodes.get(key).delete();
         }
+
         operations.add(o);
         nodes.put(key, o);
     }
@@ -230,6 +244,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         if ( values.containsKey(key) ) {
             values.get(key).delete();
         }
+
         operations.add(o);
         values.put(key, o);
     }
@@ -253,6 +268,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         if ( nodes.containsKey(key) ) {
             nodes.get(key).delete();
         }
+
         operations.add(o);
         nodes.put(key, o);
     }
@@ -276,6 +292,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
         if ( values.containsKey(key) ) {
             values.get(key).delete();
         }
+
         operations.add(o);
         values.put(key, o);
     }
@@ -283,7 +300,7 @@ public class TransactionalNodeStore<USERKEY, STOREKEY, VALUE>
     /**
      * An interface to provide a callback for doing operations on sub-{@link TransactionalNodeStore}s.
      */
-    public static interface SubTx<USERKEY, STOREKEY, VALUE>
+    public interface SubTx<USERKEY, STOREKEY, VALUE>
     {
         /**
          * The callback routine that builds up a subtransaction.
