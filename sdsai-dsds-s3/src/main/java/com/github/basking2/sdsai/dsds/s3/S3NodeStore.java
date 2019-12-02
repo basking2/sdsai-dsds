@@ -101,7 +101,7 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
 
     @Override
     public void store(final S3ObjectId key, final String data) {
-        client.putObject(key.getKey(), prefix + key.getKey(), data);
+        client.putObject(key.getBucket(), prefix + key.getKey(), data);
     }
 
     @Override
