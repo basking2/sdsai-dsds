@@ -62,7 +62,7 @@ public class NodeUtil {
         final int childCap = bb.getInt();
         final int dataCap = bb.getInt();
         final int ancestorsCap = bb.getInt();
-        final Node<USERKEY, STOREKEY> node = new Node(childCap, dataCap, ancestorsCap);
+        final Node<USERKEY, STOREKEY> node = new Node<>(childCap, dataCap, ancestorsCap);
 
         final int children = bb.getInt();
         final int datums = bb.getInt();
