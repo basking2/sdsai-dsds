@@ -24,9 +24,14 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
     private final AmazonS3 client;
 
     /**
-     * The prefix all keys will be placed under.
+     * The prefix all node keys will be placed under.
      */
-    private final String prefix;
+    private final String nodePrefix;
+
+    /**
+     * The prefix all data keys will be placed under.
+     */
+    private final String dataPrefix;
 
     /**
      * The bucket keys will in.
@@ -37,12 +42,27 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
      * Constructor.
      * @param client How to access S3.
      * @param bucket The bucket.
+     * @param nodePrefix The key prefix that keys will be put under. This should probably end in a / as no / is inserted.
+     * @param dataPrefix The key prefix that keys will be put under. This should probably end in a / as no / is inserted.
+     */
+    public S3NodeStore(final AmazonS3 client, final String bucket, final String nodePrefix, final String dataPrefix) {
+        this.client = client;
+        this.bucket = bucket;
+        this.nodePrefix = nodePrefix;
+        this.dataPrefix = dataPrefix;
+    }
+
+    /**
+     * Constructor.
+     * @param client How to access S3.
+     * @param bucket The bucket.
      * @param prefix The key prefix that keys will be put under. This should probably end in a / as no / is inserted.
      */
     public S3NodeStore(final AmazonS3 client, final String bucket, final String prefix) {
         this.client = client;
         this.bucket = bucket;
-        this.prefix = prefix;
+        this.nodePrefix = prefix;
+        this.dataPrefix = prefix;
     }
 
     /**
@@ -62,7 +82,7 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
      */
     @Override
     public String loadData(final S3ObjectId key) {
-        try (final InputStream is = client.getObject(new GetObjectRequest(key.getBucket(), prefix + key.getKey())).getObjectContent()) {
+        try (final InputStream is = client.getObject(new GetObjectRequest(key.getBucket(), dataPrefix + key.getKey())).getObjectContent()) {
             return IOUtils.toString(is);
         }
         catch(final AmazonS3Exception e) {
@@ -70,17 +90,17 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
                 return null;
             }
             else {
-                throw new NodeStoreException("Loading key "+prefix+key.getKey(), e);
+                throw new NodeStoreException("Loading key "+dataPrefix+key.getKey(), e);
             }
         }
         catch (final Throwable t) {
-            throw new NodeStoreException("Loading key "+prefix+key.getKey(), t);
+            throw new NodeStoreException("Loading key "+dataPrefix+key.getKey(), t);
         }
     }
 
     @Override
     public Node<String, S3ObjectId> loadNode(final S3ObjectId key) {
-        try (final S3Object o = client.getObject(new GetObjectRequest(key.getBucket(), prefix + key.getKey()))) {
+        try (final S3Object o = client.getObject(new GetObjectRequest(key.getBucket(), nodePrefix + key.getKey()))) {
             return NodeUtil.readNode(
                     o.getObjectContent(),
                     userKey -> new String(userKey),
@@ -101,7 +121,7 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
 
     @Override
     public void store(final S3ObjectId key, final String data) {
-        client.putObject(key.getBucket(), prefix + key.getKey(), data);
+        client.putObject(key.getBucket(), dataPrefix + key.getKey(), data);
     }
 
     @Override
@@ -114,7 +134,7 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
                     objectMetadata.setContentLength(count);
                     final PutObjectRequest putObjectRequest = new PutObjectRequest(
                             key.getBucket(),
-                            prefix + key.getKey(),
+                            nodePrefix + key.getKey(),
                             new ByteArrayInputStream(buf, 0, count),
                             objectMetadata);
                     client.putObject(putObjectRequest);
@@ -133,12 +153,12 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
 
     @Override
     public void removeNode(final S3ObjectId key) {
-        client.deleteObject(key.getBucket(), prefix + key.getKey());
+        client.deleteObject(key.getBucket(), nodePrefix + key.getKey());
     }
 
     @Override
     public void removeData(final S3ObjectId key) {
-        client.deleteObject(key.getBucket(), prefix + key.getKey());
+        client.deleteObject(key.getBucket(), dataPrefix + key.getKey());
     }
 
     @Override
