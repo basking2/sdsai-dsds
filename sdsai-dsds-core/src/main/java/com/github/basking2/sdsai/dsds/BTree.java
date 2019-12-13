@@ -473,7 +473,8 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
     public V put(final K key, final V value)
     {
         final STOREKEY storeKey = nodeStore.convert(key);
-        
+
+
         // If the key is already in the store, we are only replacing it.
         // We have hard work to do only when a new key is added.
         if ( containsKey(key) ) {
@@ -481,40 +482,82 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
             nodeStore.store(storeKey, value);
             return v;
         }
-        
-        // A new key is being added.
-        final NodeContext ctx = new NodeContext();
-        int insertionPoint = -1;
-        
-        while ( ! ctx.node.isLeaf() ) {
 
-            ctx.conditionallySplit(insertionPoint, key, storeKey);
-            
-            // the index of the search key, if it is contained in the list ;
-            //   otherwise, (-(insertion point) - 1)
-            final int index = binarySearch(ctx.node.getData(), key, null);
-            
-            insertionPoint = -(index+1);
-            
-            ctx.descend(insertionPoint);
-        }
-        
-        // We've stepped into a leaf.
-        ctx.conditionallySplit(insertionPoint, key, storeKey);
+        putKey(key, storeKey);
 
-        final int index = binarySearch(ctx.node.getData(), key, null);
-        
-        insertionPoint = -(index+1);
-        
-        ctx.node.getData().add(insertionPoint, key);
+        // Regardless of if the key was in the storage medium or not, we write the user's data.
         nodeStore.store(storeKey, value);
-        nodeStore.store(ctx.nodeKey, ctx.node);
-    
+
         // We've already determined that there is not already a value.
         // So this is always null.
         return null; 
     }
-    
+
+    /**
+     * This function encodes and writes the key into the data structure.
+     *
+     * This is useful for situations where the user data is already in a data store and we are just building
+     * additional indexes to it.
+     *
+     * @param key The key to add to the structure.
+     * @return True if the key was inserted. False if the key already existed.
+     */
+    public boolean putKey(final K key) {
+        return putKey(key, nodeStore.convert(key));
+    }
+
+    /**
+     * This function encodes and writes the key into the data structure.
+     *
+     * This is useful for situations where the user data is already in a data store and we are just building
+     * additional indexes to it.
+     *
+     * @param key The key to add to the structure.
+     * @param storeKey The key converted by {@link NodeStore#convert(Object)}.
+     * @return True if the key was inserted. False if the key already existed.
+     */
+    private boolean putKey(final K key, final STOREKEY storeKey) {
+
+        // A new key is being added.
+        final NodeContext ctx = new NodeContext();
+        int insertionPoint = -1;
+
+        while ( ! ctx.node.isLeaf() ) {
+
+            ctx.conditionallySplit(insertionPoint, key, storeKey);
+
+            // the index of the search key, if it is contained in the list ;
+            //   otherwise, (-(insertion point) - 1)
+            final int index = binarySearch(ctx.node.getData(), key, null);
+
+            if (index >= 0) {
+                // The key is already in the tree. We are done.
+                return false;
+            }
+
+            insertionPoint = -(index+1);
+
+            ctx.descend(insertionPoint);
+        }
+
+        // We've stepped into a leaf.
+        ctx.conditionallySplit(insertionPoint, key, storeKey);
+
+        final int index = binarySearch(ctx.node.getData(), key, null);
+
+        if (index >= 0) {
+            // The key is already in the tree. We are done.
+            return false;
+        }
+
+        insertionPoint = -(index+1);
+
+        ctx.node.getData().add(insertionPoint, key);
+        nodeStore.store(ctx.nodeKey, ctx.node);
+
+        return true;
+    }
+
     /**
      * Calls {@link Map#entrySet()} and {@link #put}s each elment.
      */
