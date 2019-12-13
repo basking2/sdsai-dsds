@@ -43,11 +43,11 @@ implements List<V>
 {
     /**
      */
-    private STOREKEY headKey;
+    private final STOREKEY headKey;
 
     /**
      */
-    private NodeStore<STOREKEY, STOREKEY, V> nodeStore;
+    private final NodeStore<STOREKEY, STOREKEY, V> nodeStore;
     
     /**
      */
