@@ -43,12 +43,16 @@ public class DataStructureFactory
     private static <USERKEY, STOREKEY, VALUE> TransactionalNodeStore<USERKEY, STOREKEY, VALUE> txNodeStore(
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
+        final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> store;
         if ( nodeStore instanceof TransactionalNodeStore )
         {
-            LOG.warn("Use of a TransactionalNodeStore as the input to DataStructureFactory may result in data never being comitted.");
+            store = (TransactionalNodeStore<USERKEY, STOREKEY, VALUE>)nodeStore;
+        }
+        else {
+            store = new TransactionalNodeStore<>(nodeStore);
         }
 
-        return new TransactionalNodeStore<>(nodeStore);
+        return store;
     }
 
     private static <USERKEY, STOREKEY, VALUE> InvocationHandler buildTxCommittingInvocationHandler(
