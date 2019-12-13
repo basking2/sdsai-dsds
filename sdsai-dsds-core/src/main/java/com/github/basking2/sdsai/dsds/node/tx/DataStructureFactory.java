@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.basking2.sdsai.dsds.BTree;
+import com.github.basking2.sdsai.dsds.BTreeMap;
 import com.github.basking2.sdsai.dsds.PagedList;
 import com.github.basking2.sdsai.dsds.node.NodeStore;
 import org.slf4j.Logger;
@@ -58,23 +59,31 @@ public class DataStructureFactory
         final TransactionalNodeStore<USERKEY, STOREKEY, VALUE> transactionalNodeStore = txNodeStore(nodeStore);
         final InvocationHandler ivh = new InvocationHandler()
         {
+            private int txDepth = 0;
+
             @Override
             public Object invoke(final Object proxy, final Method method, final Object[] args)
             {
                 try
                 {
+                    txDepth++;
                     final Object returnObject = method.invoke(dispatchObject, args);
+                    txDepth--;
 
-                    transactionalNodeStore.commit();
+                    if (txDepth == 0) {
+                        transactionalNodeStore.commit();
+                    }
 
                     return returnObject;
                 }
                 catch (final InvocationTargetException ite)
                 {
+                    txDepth = 0;
                     throw new RuntimeException("Illegal access to method.", ite);
                 }
                 catch (final IllegalAccessException iae)
                 {
+                    txDepth = 0;
                     throw new RuntimeException("Illegal access to method.", iae);
                 }
             }
@@ -116,7 +125,7 @@ public class DataStructureFactory
         return list;
     }
 
-    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+    public static <USERKEY, STOREKEY, VALUE> BTreeMap<USERKEY, VALUE> bTree(
         final USERKEY root,
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore,
         final int size)
@@ -124,16 +133,16 @@ public class DataStructureFactory
         final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<>(root, nodeStore, size);
 
         @SuppressWarnings("unchecked")
-        final Map<USERKEY, VALUE> map = (Map<USERKEY, VALUE>)
+        final BTreeMap<USERKEY, VALUE> map = (BTreeMap<USERKEY, VALUE>)
             Proxy.newProxyInstance(
-                BTree.class.getClassLoader(),
-                new Class<?>[]{ Map.class },
+                BTreeMap.class.getClassLoader(),
+                new Class<?>[]{ BTreeMap.class },
                 buildTxCommittingInvocationHandler(nodeStore, bTree));
 
         return map;
     }
 
-    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> bTree(
+    public static <USERKEY, STOREKEY, VALUE> Map<USERKEY, VALUE> map(
         final USERKEY root,
         final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
     {
@@ -145,6 +154,22 @@ public class DataStructureFactory
                 BTree.class.getClassLoader(),
                 new Class<?>[]{ Map.class },
                 buildTxCommittingInvocationHandler(nodeStore, bTree));
+
+        return map;
+    }
+
+    public static <USERKEY, STOREKEY, VALUE> BTreeMap<USERKEY, VALUE> bTree(
+            final USERKEY root,
+            final NodeStore<USERKEY, STOREKEY, VALUE> nodeStore)
+    {
+        final BTree<USERKEY, STOREKEY, VALUE> bTree = new BTree<>(root, nodeStore);
+
+        @SuppressWarnings("unchecked")
+        final BTreeMap<USERKEY, VALUE> map = (BTreeMap<USERKEY, VALUE>)
+                Proxy.newProxyInstance(
+                        BTreeMap.class.getClassLoader(),
+                        new Class<?>[]{ BTreeMap.class },
+                        buildTxCommittingInvocationHandler(nodeStore, bTree));
 
         return map;
     }
