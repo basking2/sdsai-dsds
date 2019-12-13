@@ -50,7 +50,7 @@ import static java.util.Collections.binarySearch;
  *        and must be able to generate a STOREKEY for storing internal nodes.
  * @param <V> The user value type. Sett {@link Map} for its use.
  */
-public class BTree<K,STOREKEY, V> implements Map<K,V>
+public class BTree<K,STOREKEY, V> implements BTreeMap<K,V>
 {
     /**
      * The key to store and retrieve the root key.
@@ -502,6 +502,7 @@ public class BTree<K,STOREKEY, V> implements Map<K,V>
      * @param key The key to add to the structure.
      * @return True if the key was inserted. False if the key already existed.
      */
+    @Override
     public boolean putKey(final K key) {
         return putKey(key, nodeStore.convert(key));
     }
