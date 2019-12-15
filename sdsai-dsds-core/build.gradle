@@ -5,6 +5,7 @@ plugins {
   id 'maven'
   id 'signing'
   id 'eclipse'
+  id "org.asciidoctor.convert" version "2.3.0"
 }
 
 dependencies {

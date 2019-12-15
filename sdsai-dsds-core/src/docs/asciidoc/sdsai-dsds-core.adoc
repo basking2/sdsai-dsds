@@ -1,0 +1,4 @@
+= SDSAI Core
+:author: Sam Baskinger <basking2@yahoo.com>
+
+
