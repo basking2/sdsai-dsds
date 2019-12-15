@@ -1,3 +1,13 @@
 - name: sdsai-dsds-core
   link: sdsai-dsds-core
-  description: Core APIs.
+  description: |
+    <div><a href="docs/sdsai-dsds-core/sdsai-dsds-core.html">Manual</a></div>
+- name: sdsai-dsds-mongo
+  link: sdsai-dsds-mongo
+  description: MongoDB module.
+- name: sdsai-dsds-riak
+  link: sdsai-dsds-riak
+  description: Riak module.
+- name: sdsai-dsds-s3
+  link: sdsai-dsds-s3
+  description: S3 module.
