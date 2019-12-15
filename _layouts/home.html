@@ -1,0 +1,19 @@
+---
+layout: default
+---
+
+<div class="home">
+  <div class="tiles">
+    
+    {% for p in site.data.projects %}
+    <div class="tile">
+      <h2><a href="{{site.baseurl}}/{{p.link}}">{{p.name}}</a></h2>
+      <div><a href="{{site.baseurl}}/javadocs/{{p.name}}/">Javadocs</a></div>
+      {{p.description}}
+    </div>
+    {% endfor %}
+
+
+  </div>
+
+</div>
