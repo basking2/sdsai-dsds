@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * The basic object that is persisted to a large distributed 
@@ -131,19 +130,16 @@ public class Node<USERKEY, STOREKEY> implements Serializable
     }
     
     @JsonIgnore
-    @XmlTransient
     public boolean isDataFull() {
         return dataCap == data.size();
     }
     
     @JsonIgnore
-    @XmlTransient
     public boolean isChildrenFull() {
         return childCap == children.size();
     }
     
     @JsonIgnore
-    @XmlTransient
     public boolean isAncestorsFull() {
         return ancestorsCap == ancestors.size();
     }
@@ -178,7 +174,6 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      * @return true of this node has no data.
      */
     @JsonIgnore
-    @XmlTransient
     public boolean isEmpty()
     {
         return data.isEmpty();
@@ -190,7 +185,6 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      * @return true if this node has no children.
      */
     @JsonIgnore
-    @XmlTransient
     public boolean isLeaf() {
         return children.isEmpty();
     }
@@ -201,7 +195,6 @@ public class Node<USERKEY, STOREKEY> implements Serializable
      * @return true if this node has no ancestors.
      */
     @JsonIgnore
-    @XmlTransient
     public boolean isRoot() {
         return ancestors.isEmpty();
     }
