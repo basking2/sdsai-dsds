@@ -136,7 +136,7 @@ public class S3NodeStore implements NodeStore<String, S3ObjectId, String> {
                             PutObjectRequest
                                     .builder()
                                     .bucket(key.getBucket())
-                                    .key(key.getKey())
+                                    .key(nodePrefix + key.getKey())
                                     .build(),
                             RequestBody.fromByteBuffer(ByteBuffer.wrap(buf, 0, count))
 
