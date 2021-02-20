@@ -10,7 +10,7 @@ plugins {
 dependencies {
   implementation project(':sdsai-dsds-core')
   implementation 'com.basho.riak:riak-client:1.0.6'
-  testImplementation 'junit:junit:4.10'
+  testImplementation 'junit:junit:4.13.1'
 }
 
 task javadocJar(type: Jar) {

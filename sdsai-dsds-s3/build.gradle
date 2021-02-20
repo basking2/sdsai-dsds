@@ -11,8 +11,7 @@ dependencies {
     implementation project(':sdsai-dsds-core')
     implementation platform('software.amazon.awssdk:bom:2.16.1')
     implementation 'software.amazon.awssdk:s3:2.16.1'
-
-    testImplementation 'junit:junit:4.10'
+    testImplementation 'junit:junit:4.13.1'
 }
 
 task javadocJar(type: Jar) {
